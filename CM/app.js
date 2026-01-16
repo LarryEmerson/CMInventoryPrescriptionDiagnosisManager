@@ -48,8 +48,8 @@ class App {
         // 加载最后一条诊疗日志（默认值）
         await this.loadLastDiagnosisLog();
         
-        // 默认选择开方标签
-        this.switchTab("prescription");
+        // 默认选择统计标签
+        this.switchTab("statistics");
     }
 
     /**
@@ -296,6 +296,7 @@ class App {
                             <div class="drug-info">
                                 <span class="drug-name">${stockIn.drugName}</span>
                                 <span class="drug-amount">${stockIn.grams}g / ¥${stockIn.totalAmount.toFixed(2)}</span>
+                                <span class="drug-unit-price">单价：¥${(stockIn.totalAmount / stockIn.grams).toFixed(4)}/g</span>
                             </div>
                             <div class="source-info">来源：${stockIn.sourceName}</div>
                         </div>
@@ -345,6 +346,33 @@ class App {
             }
         } catch (error) {
             console.error("获取入库详情失败：", error);
+        }
+    }
+    
+    /**
+     * 显示出库详情
+     * @param {string} stockOutId 出库记录ID
+     */
+    async showStockOutDetails(stockOutId) {
+        try {
+            const stockOuts = await stockOutManager.getAllStockOuts();
+            const stockOut = stockOuts.find(so => so.id === stockOutId);
+            
+            if (stockOut) {
+                // 显示出库详情
+                alert(
+                    `出库详情：\n` +
+                    `ID: ${stockOut.id}\n` +
+                    `药物: ${stockOut.drugName}\n` +
+                    `克数: ${stockOut.grams}g\n` +
+                    `总价值: ¥${stockOut.totalAmount.toFixed(2)}\n` +
+                    `出库类型: ${stockOut.outType}\n` +
+                    `时间: ${new Date(stockOut.outTime).toLocaleString()}\n` +
+                    `备注: ${stockOut.remark || '无'}`
+                );
+            }
+        } catch (error) {
+            console.error("获取出库详情失败：", error);
         }
     }
 
@@ -498,7 +526,21 @@ class App {
     }
     
     /**
-     * 渲染出库记录
+     * 将日期时间格式化为YYYY/MM/DD/HH/mm格式
+     * @param {Date} date 要格式化的日期时间对象
+     * @returns {string} 格式化后的日期时间字符串
+     */
+    formatDateTime(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}/${month}/${day}/${hours}/${minutes}`;
+    }
+
+    /**
+     * 渲染出库记录（按YYYY/MM/DD/HH/mm格式分组）
      */
     renderStockOutList(stockOuts) {
         const container = document.getElementById('stockOutList');
@@ -509,42 +551,63 @@ class App {
             return;
         }
         
-        container.innerHTML = '';
+        // 按YYYY/MM/DD/HH/mm格式分组
+        const groupedByDateTime = stockOuts.reduce((groups, stockOut) => {
+            const date = new Date(stockOut.outTime);
+            const formattedDateTime = this.formatDateTime(date);
+            if (!groups[formattedDateTime]) {
+                groups[formattedDateTime] = [];
+            }
+            groups[formattedDateTime].push(stockOut);
+            return groups;
+        }, {});
         
-        stockOuts.forEach(stockOut => {
-            const recordEl = document.createElement('div');
-            recordEl.className = 'stock-out-record';
-            recordEl.innerHTML = `
-                <div class="record-header">
-                    <span class="record-time">${new Date(stockOut.outTime).toLocaleString()}</span>
-                    <button class="detail-btn" data-id="${stockOut.id}">详情</button>
-                </div>
-                <div class="record-content">
-                    <div>药物：${stockOut.drugName}</div>
-                    <div>数量：${stockOut.grams}g</div>
-                    <div>总价值：${stockOut.totalAmount}元</div>
-                    <div>类型：${stockOut.outType}</div>
-                    ${stockOut.remark ? `<div>备注：${stockOut.remark}</div>` : ''}
-                </div>
-                <div class="record-details" id="detail-${stockOut.id}" style="display: none;"></div>
+        // 渲染分组后的记录
+        let html = '';
+        
+        // 按日期时间降序排序
+        const sortedDateTimes = Object.keys(groupedByDateTime).sort((a, b) => {
+            // 将YYYY/MM/DD/HH/mm格式转换为日期对象进行比较
+            const dateA = new Date(a.replace(/\//g, '-').replace(/(\d{4}-\d{2}-\d{2})-(\d{2})-(\d{2})/, '$1T$2:$3:00'));
+            const dateB = new Date(b.replace(/\//g, '-').replace(/(\d{4}-\d{2}-\d{2})-(\d{2})-(\d{2})/, '$1T$2:$3:00'));
+            return dateB - dateA;
+        });
+        
+        sortedDateTimes.forEach(formattedDateTime => {
+            const timeStockOuts = groupedByDateTime[formattedDateTime];
+            
+            // 创建分组标题
+            html += `
+                <div class="date-group">
+                    <div class="date-header">${formattedDateTime}</div>
+                    <div class="stock-out-records">
             `;
-            container.appendChild(recordEl);
+            
+            // 渲染当前分组下的出库记录
+            timeStockOuts.forEach(stockOut => {
+                html += `
+                    <div class="stock-out-record">
+                        <div class="record-header">
+                            <!-- 移除时间显示，因为分组标题已经显示 -->
+                        </div>
+                        <div class="record-content">
+                            <div>药物：${stockOut.drugName}</div>
+                            <div>数量：${stockOut.grams}g</div>
+                            <div>总价值：${stockOut.totalAmount}元</div>
+                            <div>类型：${stockOut.outType}</div>
+                            ${stockOut.remark ? `<div>备注：${stockOut.remark}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+                </div>
+            `;
         });
         
-        // 绑定详情按钮事件
-        document.querySelectorAll('.detail-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const id = btn.dataset.id;
-                const detailEl = document.getElementById(`detail-${id}`);
-                if (detailEl.style.display === 'none') {
-                    detailEl.style.display = 'block';
-                    // 这里可以加载更详细的信息
-                    detailEl.innerHTML = '<p>详细信息加载中...</p>';
-                } else {
-                    detailEl.style.display = 'none';
-                }
-            });
-        });
+        container.innerHTML = html;
     }
 
     /**
@@ -572,8 +635,7 @@ class App {
             drugItem.className = "prescription-drug-item";
 
             drugItem.innerHTML = `
-                <span>药物：${drug.name}</span>
-                <span>克数：</span>
+                <span>${drug.name}</span> 
                 <input type="number" class="drug-grams-input" data-index="${index}" value="${drug.grams}" min="1" step="1">
                 <button class="delete-drug-btn" data-index="${index}">删除</button>
             `;

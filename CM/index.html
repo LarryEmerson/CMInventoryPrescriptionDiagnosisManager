@@ -80,6 +80,8 @@
         }
         .form-group {
             margin: 10px 0;
+            max-width: 100%;
+            overflow-x: auto;
         }
         label {
             display: inline-block;
@@ -87,26 +89,36 @@
             text-align: right;
             margin-right: 10px;
         }
-        input, select, textarea {
+        input, select {
             padding: 8px 12px;
             width: 250px;
+            max-width: 100%;
             border: 1px solid #444444;
             border-radius: 6px;
             font-size: 14px;
             transition: all 0.3s ease;
             background-color: #3d3d3d;
             color: #e0e0e0;
+            box-sizing: border-box;
+        }
+        
+        textarea {
+            padding: 8px 12px;
+            width: 100%;
+            border: 1px solid #444444;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background-color: #3d3d3d;
+            color: #e0e0e0;
+            resize: vertical;
+            min-height: 80px;
         }
         
         input:focus, select:focus, textarea:focus {
             outline: none;
             border-color: #4285f4;
             box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.3);
-        }
-        
-        textarea {
-            resize: vertical;
-            min-height: 80px;
         }
         button {
             padding: 8px 16px;
@@ -158,11 +170,45 @@
         .prescription-drug-item {
             margin: 10px 0;
             padding: 10px;
-            /* border: 1px solid #eee; */
             border-radius: 4px;
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+        
+        .prescription-drug-item span {
+            flex-grow: 1;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .drug-grams-input {
+            width: 100px;
+            padding: 6px 10px;
+            border: 1px solid #444444;
+            border-radius: 4px;
+            background-color: #3d3d3d;
+            color: #e0e0e0;
+            font-size: 14px;
+        }
+        
+        .delete-drug-btn {
+            flex-grow: 0;
+            width: auto;
+            padding: 6px 12px;
+            background-color: #ea4335;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .delete-drug-btn:hover {
+            background-color: #d33b2d;
         }
         .popup {
             position: fixed;
@@ -418,6 +464,9 @@
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            table-layout: fixed; /* 固定表格布局，确保表格宽度不超过父容器 */
+            word-wrap: break-word; /* 允许单词换行 */
+            word-break: break-all; /* 允许在任何字符处换行 */
         }
         
         .drug-table th, .drug-table td {
@@ -426,6 +475,13 @@
             text-align: left;
             font-size: 14px;
             color: #e0e0e0;
+            white-space: normal; /* 允许正常换行 */
+            overflow-wrap: break-word; /* 允许长单词或URL换行 */
+        }
+        
+        /* 为备注列设置最大宽度 */
+        .drug-table td:last-child, .drug-table th:last-child {
+            max-width: 200px;
         }
         
         .drug-table th {
@@ -517,7 +573,7 @@
         }
 
         .date-header {
-            background-color: #f5f5f5;
+            /* background-color: #f5f5f5; */
             padding: 8px 15px;
             font-weight: bold;
             border-bottom: 1px solid #eee;
@@ -529,10 +585,10 @@
 
         .stock-in-item {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            justify-content: flex-start;
+            align-items: flex-start;
             padding: 10px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #444444;
         }
 
         .stock-in-item:last-child {
@@ -541,12 +597,15 @@
 
         .stock-in-info {
             flex: 1;
+            text-align: left;
         }
 
         .drug-info {
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            justify-content: flex-start;
             margin-bottom: 5px;
+            gap: 3px;
         }
 
         .drug-name {
@@ -554,24 +613,30 @@
         }
 
         .drug-amount {
-            color: #666;
+            color: #b0b0b0;
+        }
+
+        .drug-unit-price {
+            color: #b0b0b0;
+            font-size: 14px;
         }
 
         .source-info {
             font-size: 14px;
-            color: #666;
+            color: #b0b0b0;
         }
 
         .stock-in-details {
             margin-left: 15px;
+            display: none;
         }
 
         /* 出库记录样式 */
         .stock-out-record {
-            border: 1px solid #eee;
+            /* border: 1px solid #eee; */
             border-radius: 4px;
-            margin-bottom: 10px;
-            padding: 10px;
+            margin-bottom: 0px;
+            padding: 4px 4px;
         }
 
         .record-header {
@@ -626,74 +691,15 @@
         </div>
     </div>
 
-    <!-- 统计模块 -->
-    <div class="module">
-        <!-- <div class="module-title">数据统计</div> -->
-        <div class="stats-grid">
-            <div class="stats-card">
-                <h3>昨日统计</h3>
-                <div class="stats-summary">
-                    <p>总量：<span id="yesterdayTotalGrams">0</span>g</p>
-                    <p>种类：<span id="yesterdayTotalTypes">0</span>种</p>
-                    <p>总额：<span id="yesterdayTotalAmount">0</span>元</p>
-                </div>
-                <div>
-                    <h4>详情列表</h4>
-                    <table class="drug-table">
-                        <thead>
-                            <tr>
-                                <th>药物</th>
-                                <th>用量(g)</th>
-                                <th>金额(元)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="yesterdayDrugList"></tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="stats-card">
-                <h3>今日统计</h3>
-                <div class="stats-summary">
-                    <p>总量：<span id="todayTotalGrams">0</span>g</p>
-                    <p>种类：<span id="todayTotalTypes">0</span>种</p>
-                    <p>总额：<span id="todayTotalAmount">0</span>元</p>
-                </div>
-                <div>
-                    <h4>详情列表</h4>
-                    <table class="drug-table">
-                        <thead>
-                            <tr>
-                                <th>药物</th>
-                                <th>用量(g)</th>
-                                <th>金额(元)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="todayDrugList"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <div class="warning-list">
-            <h3>预警列表  <span class="warning-text">共<span id="warningCount">0</span>种</span></h3>      
-            <table class="drug-table">
-                <thead>
-                    <tr>
-                        <th>药物</th>
-                        <th>库存(g)</th>
-                        <th>阈值(g)</th>
-                    </tr>
-                </thead>
-                <tbody id="warningDrugList"></tbody>
-            </table>
-        </div>
-    </div>
+    <!-- 统计模块将被移动到新的tab标签中 -->
 
     <!-- Tab标签组件 -->
     <div class="module-tab">
         <div class="tab-container">
             <!-- Tab标签 -->
             <div class="tab-header">
-                <button class="tab-btn active" data-tab="prescription">开方</button>
+                <button class="tab-btn active" data-tab="statistics">统计</button>
+                <button class="tab-btn" data-tab="prescription">开方</button>
                 <button class="tab-btn" data-tab="stockOut">出库记录</button>
                 <button class="tab-btn" data-tab="dataManager">数据管理</button>
                 <button class="tab-btn" data-tab="stockIn">入库记录</button>
@@ -703,8 +709,71 @@
 
             <!-- Tab内容 -->
             <div class="tab-content">
+                <!-- 统计标签内容 -->
+                <div id="statistics" class="tab-panel active">
+                    <div class="module">
+                        <div class="module-title">数据统计</div>
+                        <div class="stats-grid">
+                            <div class="stats-card">
+                                <h3>昨日统计</h3>
+                                <div class="stats-summary">
+                                    <p>总量：<span id="yesterdayTotalGrams">0</span>g</p>
+                                    <p>种类：<span id="yesterdayTotalTypes">0</span>种</p>
+                                    <p>总额：<span id="yesterdayTotalAmount">0</span>元</p>
+                                </div>
+                                <div>
+                                    <h4>详情列表</h4>
+                                    <table class="drug-table">
+                                        <thead>
+                                            <tr>
+                                                <th>药物</th>
+                                                <th>用量(g)</th>
+                                                <th>金额(元)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="yesterdayDrugList"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="stats-card">
+                                <h3>今日统计</h3>
+                                <div class="stats-summary">
+                                    <p>总量：<span id="todayTotalGrams">0</span>g</p>
+                                    <p>种类：<span id="todayTotalTypes">0</span>种</p>
+                                    <p>总额：<span id="todayTotalAmount">0</span>元</p>
+                                </div>
+                                <div>
+                                    <h4>详情列表</h4>
+                                    <table class="drug-table">
+                                        <thead>
+                                            <tr>
+                                                <th>药物</th>
+                                                <th>用量(g)</th>
+                                                <th>金额(元)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="todayDrugList"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="warning-list">
+                            <h3>预警列表  <span class="warning-text">共<span id="warningCount">0</span>种</span></h3>      
+                            <table class="drug-table">
+                                <thead>
+                                    <tr>
+                                        <th>药物</th>
+                                        <th>库存(g)</th>
+                                        <th>阈值(g)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="warningDrugList"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
                 <!-- 开方标签内容 -->
-                <div id="prescription" class="tab-panel active">
+                <div id="prescription" class="tab-panel">
                     <div class="module">
                         <div class="module-title">开方管理</div>
                         <h4>上次记录</h4>
