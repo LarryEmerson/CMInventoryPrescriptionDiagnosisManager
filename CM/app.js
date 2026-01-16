@@ -47,6 +47,9 @@ class App {
 
         // 加载最后一条诊疗日志（默认值）
         await this.loadLastDiagnosisLog();
+        
+        // 默认选择开方标签
+        this.switchTab("prescription");
     }
 
     /**
