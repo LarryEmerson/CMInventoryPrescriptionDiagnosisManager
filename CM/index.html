@@ -339,7 +339,7 @@
         <div class="module" style="margin-top: 20px;">
             <div class="module-title">诊疗日志录入</div>
             <div class="diagnosis-grid">
-                <!-- 尿液情况 -->
+                <!-- 第1列：尿液情况 + 运动情况 -->
                 <div>
                     <h4>尿液情况</h4>
                     <div class="form-group">
@@ -421,10 +421,6 @@
                         <label for="shortUrineRemark">短尿备注：</label>
                         <textarea id="shortUrineRemark" rows="2"></textarea>
                     </div>
-                </div>
-
-                <!-- 大便情况 -->
-                <div>
                     <h4>大便情况</h4>
                     <div class="form-group">
                         <label for="stoolColor">大便颜色：</label>
@@ -443,7 +439,38 @@
                         </select>
                     </div>
 
-                    <!-- 睡眠情况 -->
+                    <h4>运动情况</h4>
+                    <div class="form-group">
+                        <label for="exerciseMorning">早晨：</label>
+                        <select id="exerciseMorning">
+                            <option value="无">无</option>
+                            <option value="步行">步行</option>
+                            <option value="八段锦">八段锦</option>
+                            <option value="金刚功">金刚功</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="exerciseNoon">中午：</label>
+                        <select id="exerciseNoon">
+                            <option value="无">无</option>
+                            <option value="步行">步行</option>
+                            <option value="八段锦">八段锦</option>
+                            <option value="金刚功">金刚功</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="exerciseEvening">晚上：</label>
+                        <select id="exerciseEvening">
+                            <option value="无">无</option>
+                            <option value="步行">步行</option>
+                            <option value="八段锦">八段锦</option>
+                            <option value="金刚功">金刚功</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 第2列：大便情况 + 睡眠情况 + 其他情况 -->
+                <div> 
                     <h4>睡眠情况</h4>
                     <div class="form-group">
                         <label for="sleepNoon">午间：</label>
@@ -568,38 +595,6 @@
                     <div class="form-group">
                         <label for="sleepAssist">睡眠辅助：</label>
                         <input type="text" id="sleepAssist" placeholder="洗脚、热水袋等">
-                    </div>
-                </div>
-
-                <!-- 运动情况 & 其他情况 -->
-                <div>
-                    <h4>运动情况</h4>
-                    <div class="form-group">
-                        <label for="exerciseMorning">早晨：</label>
-                        <select id="exerciseMorning">
-                            <option value="无">无</option>
-                            <option value="步行">步行</option>
-                            <option value="八段锦">八段锦</option>
-                            <option value="金刚功">金刚功</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="exerciseNoon">中午：</label>
-                        <select id="exerciseNoon">
-                            <option value="无">无</option>
-                            <option value="步行">步行</option>
-                            <option value="八段锦">八段锦</option>
-                            <option value="金刚功">金刚功</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="exerciseEvening">晚上：</label>
-                        <select id="exerciseEvening">
-                            <option value="无">无</option>
-                            <option value="步行">步行</option>
-                            <option value="八段锦">八段锦</option>
-                            <option value="金刚功">金刚功</option>
-                        </select>
                     </div>
 
                     <h4>其他情况</h4>
