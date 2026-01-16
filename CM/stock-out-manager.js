@@ -133,6 +133,20 @@ class StockOutManager {
             return [];
         }
     }
+    
+    /**
+     * 获取所有出库记录（按时间倒序）
+     */
+    async getAllStockOuts() {
+        try {
+            const stockOuts = await dbManager.getAllData(this.storeName);
+            // 按时间倒序排序
+            return stockOuts.sort((a, b) => new Date(b.outTime) - new Date(a.outTime));
+        } catch (error) {
+            console.error("获取所有出库记录失败：", error);
+            return [];
+        }
+    }
 }
 
 // 暴露全局实例

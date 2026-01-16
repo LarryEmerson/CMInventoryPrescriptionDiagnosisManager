@@ -66,6 +66,21 @@ class StockInManager {
             return [];
         }
     }
+
+    /**
+     * 获取所有入库记录（按入库时间降序）
+     * @returns {Promise} 入库记录数组
+     */
+    async getAllStockIns() {
+        try {
+            const stockIns = await dbManager.getAllData(this.storeName);
+            // 按入库时间降序排序
+            return stockIns.sort((a, b) => new Date(b.inTime) - new Date(a.inTime));
+        } catch (error) {
+            console.error("获取所有入库记录失败：", error);
+            return [];
+        }
+    }
 }
 
 // 暴露全局实例
