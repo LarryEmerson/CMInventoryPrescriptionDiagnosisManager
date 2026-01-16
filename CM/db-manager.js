@@ -152,6 +152,7 @@ class DBManager {
      * @returns {Promise} 删除结果
      */
     async deleteData(storeName, key) {
+        console.log('deleteData',storeName,key)
         return this.processTransaction({
             storeName,
             mode: "readwrite",
@@ -216,6 +217,31 @@ class DBManager {
 
                     request.onerror = (event) => {
                         reject(new Error(`查询所有数据失败：${event.target.error.message}`));
+                    };
+                });
+            }
+        });
+    }
+
+    /**
+     * 删除所有数据
+     * @param {string} storeName 仓库名称
+     * @returns {Promise} 删除结果
+     */
+    async deleteAllData(storeName) {
+        return this.processTransaction({
+            storeName,
+            mode: "readwrite",
+            operation: (objectStore) => {
+                return new Promise((resolve, reject) => {
+                    const request = objectStore.clear();
+
+                    request.onsuccess = () => {
+                        resolve(true);
+                    };
+
+                    request.onerror = (event) => {
+                        reject(new Error(`删除所有数据失败：${event.target.error.message}`));
                     };
                 });
             }
@@ -349,3 +375,9 @@ class DBManager {
 
 // 暴露全局实例
 const dbManager = DBManager.getInstance();
+// 确保deleteAllData方法存在
+if (!dbManager.deleteAllData) {
+    console.error('deleteAllData方法不存在');
+}
+window.dbManager = dbManager;
+console.log('dbManager实例已暴露，deleteAllData方法存在:', typeof dbManager.deleteAllData);

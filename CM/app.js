@@ -9,6 +9,10 @@ class App {
         this.prescriptionDrugList = document.getElementById("prescriptionDrugList");
         this.drugSelectPopup = document.getElementById("drugSelectPopup");
         this.selectableDrugList = document.getElementById("selectableDrugList");
+        // 批量操作弹窗DOM元素
+        this.batchSourcePopup = document.getElementById("batchSourcePopup");
+        this.batchDrugPopup = document.getElementById("batchDrugPopup");
+        this.batchStockInPopup = document.getElementById("batchStockInPopup");
         // 导入相关DOM元素
         this.importPopup = document.getElementById("importPopup");
         this.importPopupTitle = document.getElementById("importPopupTitle");
@@ -152,6 +156,100 @@ class App {
         // 关闭药物选择弹窗
         document.getElementById("closePopupBtn").addEventListener("click", () => {
             this.drugSelectPopup.style.display = "none";
+        });
+
+        // 批量新增来源按钮
+        document.getElementById("batchAddSourceBtn").addEventListener("click", () => {
+            this.batchSourcePopup.style.display = "flex";
+        });
+
+        // 关闭批量新增来源弹窗
+        document.getElementById("closeBatchSourceBtn").addEventListener("click", () => {
+            this.batchSourcePopup.style.display = "none";
+            document.getElementById("batchSourceText").value = "";
+        });
+
+        // 批量新增来源删除全部按钮 - 修改为删除所有来源数据
+        document.getElementById("clearAllSourceBtn").addEventListener("click", async () => {
+            if (confirm("确定要删除所有药物来源数据吗？此操作不可恢复！")) {
+                try {
+                    await window.dbManager.deleteAllData("sources");
+                    this.showTip(true, "所有药物来源数据已删除");
+                    // 刷新相关UI
+                    this.loadSourceSelect();
+                    this.loadSourceList();
+                } catch (error) {
+                    this.showTip(false, `删除失败：${error.message}`);
+                }
+            }
+        });
+
+        // 确认批量新增来源
+        document.getElementById("confirmBatchSourceBtn").addEventListener("click", async () => {
+            await this.handleBatchAddSource();
+        });
+
+        // 批量新增药物按钮
+        document.getElementById("batchAddDrugBtn").addEventListener("click", () => {
+            this.batchDrugPopup.style.display = "flex";
+        });
+
+        // 关闭批量新增药物弹窗
+        document.getElementById("closeBatchDrugBtn").addEventListener("click", () => {
+            this.batchDrugPopup.style.display = "none";
+            document.getElementById("batchDrugText").value = "";
+        });
+
+        // 批量新增药物删除全部按钮 - 修改为删除所有药物数据
+        document.getElementById("clearAllDrugBtn").addEventListener("click", async () => {
+            // if (confirm("确定要删除所有药物数据吗？此操作不可恢复！")) {
+                try {
+                    await window.dbManager.deleteAllData("drugs");
+                    this.showTip(true, "所有药物数据已删除");
+                    // 刷新相关UI
+                    this.loadDrugSelect();
+                    this.loadDrugList();
+                } catch (error) {
+                    this.showTip(false, `删除失败：${error.message}`);
+                }
+            // }
+        });
+
+        // 确认批量新增药物
+        document.getElementById("confirmBatchDrugBtn").addEventListener("click", async () => {
+            await this.handleBatchAddDrug();
+        });
+
+        // 批量入库按钮
+        document.getElementById("batchStockInBtn").addEventListener("click", () => {
+            this.batchStockInPopup.style.display = "flex";
+        });
+
+        // 关闭批量入库弹窗
+        document.getElementById("closeBatchStockInBtn").addEventListener("click", () => {
+            this.batchStockInPopup.style.display = "none";
+            document.getElementById("batchStockInText").value = "";
+        });
+
+        // 批量入库删除全部按钮 - 修改为删除所有入库数据
+        document.getElementById("clearAllStockInBtn").addEventListener("click", async () => {
+            // if (confirm("确定要删除所有入库数据吗？此操作不可恢复！")) {
+                try {
+                    // 确保使用全局的dbManager实例
+                    console.log('>>1', window.dbManager, window.dbManager.deleteAllData);
+                    await window.dbManager.deleteAllData("stockIns");
+                    this.showTip(true, "所有入库数据已删除");
+                    // 刷新相关UI
+                    this.loadStockInList();
+                } catch (error) {
+                    this.showTip(false, `删除失败：${error.message}`);
+                }
+            // }
+        });
+
+        // 确认批量入库
+        document.getElementById("confirmBatchStockInBtn").addEventListener("click", async () => {
+            await this.handleBatchStockIn();
         });
 
         // 提交开方
@@ -973,34 +1071,45 @@ class App {
         const lines = importText.split("\n").filter(line => line.trim());
         let successCount = 0;
         let errorCount = 0;
+        let errorMessages = [];
+        let failedData = [];
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
             const parts = line.split(/\s+/);
             
-            if (parts.length < 1) {
-                this.showTip(false, `第${i + 1}行格式错误：数据不完整`);
-                return { successCount, errorCount };
-            }
+            try {
+                if (parts.length < 1) {
+                    throw new Error(`第${i + 1}行格式错误：数据不完整`);
+                }
 
-            const name = parts[0];
-            const remark = parts.slice(1).join(" ");
+                const name = parts[0];
+                const remark = parts.slice(1).join(" ");
 
-            // 校验重复
-            const existingSource = await dbManager.getDataByIndex("sources", "name", name);
-            if (existingSource) {
-                this.showTip(false, `第${i + 1}行：来源"${name}"已存在`);
-                return { successCount, errorCount };
-            }
+                // 校验重复
+                const existingSource = await dbManager.getDataByIndex("sources", "name", name);
+                if (existingSource) {
+                    throw new Error(`第${i + 1}行：来源"${name}"已存在`);
+                }
 
-            // 新增来源
-            const result = await sourceManager.addSource(name, remark);
-            if (result.success) {
-                successCount++;
-            } else {
-                this.showTip(false, `第${i + 1}行：${result.message}`);
-                return { successCount, errorCount };
+                // 新增来源
+                const result = await sourceManager.addSource(name, remark);
+                if (result.success) {
+                    successCount++;
+                } else {
+                    throw new Error(`第${i + 1}行：${result.message}`);
+                }
+            } catch (error) {
+                errorCount++;
+                errorMessages.push(error.message);
+                failedData.push(line);
             }
+        }
+
+        // 显示所有错误信息和失败数据
+        if (errorMessages.length > 0) {
+            let errorText = errorMessages.join("\n") + "\n\n失败的数据：\n" + failedData.join("\n") + "\n\n请复制失败的数据进行修正后重新导入。";
+            this.showTip(false, errorText);
         }
 
         return { successCount, errorCount };
@@ -1013,54 +1122,63 @@ class App {
         const lines = importText.split("\n").filter(line => line.trim());
         let successCount = 0;
         let errorCount = 0;
+        let errorMessages = [];
+        let failedData = [];
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
             const parts = line.split(/\s+/);
             
-            if (parts.length < 4) {
-                this.showTip(false, `第${i + 1}行格式错误：数据不完整`);
-                return { successCount, errorCount };
-            }
+            try {
+                if (parts.length < 4) {
+                    throw new Error(`第${i + 1}行格式错误：数据不完整`);
+                }
 
-            const name = parts[0];
-            const storageType = parts[1];
-            const minStock = parts[2];
-            const defaultEstimate = parts[3];
+                const name = parts[0];
+                const storageType = parts[1];
+                const minStock = parts[2];
+                const defaultEstimate = parts[3];
 
-            // 校验存储方式
-            if (storageType !== "密封" && storageType !== "冷藏") {
-                this.showTip(false, `第${i + 1}行：存储方式必须为"密封"或"冷藏"`);
-                return { successCount, errorCount };
-            }
+                // 校验存储方式
+                if (storageType !== "密封" && storageType !== "冷藏") {
+                    throw new Error(`第${i + 1}行：存储方式必须为"密封"或"冷藏"`);
+                }
 
-            // 校验数值
-            if (isNaN(minStock) || isNaN(defaultEstimate) || Number(minStock) < 0 || Number(defaultEstimate) < 1) {
-                this.showTip(false, `第${i + 1}行：数值格式错误`);
-                return { successCount, errorCount };
-            }
+                // 校验数值
+                if (isNaN(minStock) || isNaN(defaultEstimate) || Number(minStock) < 0 || Number(defaultEstimate) < 1) {
+                    throw new Error(`第${i + 1}行：数值格式错误`);
+                }
 
-            // 校验重复
-            const existingDrug = await dbManager.getDataByIndex("drugs", "name", name);
-            if (existingDrug) {
-                this.showTip(false, `第${i + 1}行：药物"${name}"已存在`);
-                return { successCount, errorCount };
-            }
+                // 校验重复
+                const existingDrug = await dbManager.getDataByIndex("drugs", "name", name);
+                if (existingDrug) {
+                    throw new Error(`第${i + 1}行：药物"${name}"已存在`);
+                }
 
-            // 新增药物
-            const drugInfo = {
-                name,
-                storageType,
-                minStock,
-                defaultEstimate
-            };
-            const result = await drugManager.addDrug(drugInfo);
-            if (result.success) {
-                successCount++;
-            } else {
-                this.showTip(false, `第${i + 1}行：${result.message}`);
-                return { successCount, errorCount };
+                // 新增药物
+                const drugInfo = {
+                    name,
+                    storageType,
+                    minStock,
+                    defaultEstimate
+                };
+                const result = await drugManager.addDrug(drugInfo);
+                if (result.success) {
+                    successCount++;
+                } else {
+                    throw new Error(`第${i + 1}行：${result.message}`);
+                }
+            } catch (error) {
+                errorCount++;
+                errorMessages.push(error.message);
+                failedData.push(line);
             }
+        }
+
+        // 显示所有错误信息和失败数据
+        if (errorMessages.length > 0) {
+            let errorText = errorMessages.join("\n") + "\n\n失败的数据：\n" + failedData.join("\n") + "\n\n请复制失败的数据进行修正后重新导入。";
+            this.showTip(false, errorText);
         }
 
         return { successCount, errorCount };
@@ -1073,6 +1191,8 @@ class App {
         const lines = importText.split("\n").filter(line => line.trim());
         let successCount = 0;
         let errorCount = 0;
+        let errorMessages = [];
+        let failedData = [];
 
         // 先获取所有药物和来源数据，用于校验
         const drugs = await drugManager.getDrugList();
@@ -1084,57 +1204,142 @@ class App {
             const line = lines[i].trim();
             const parts = line.split(/\s+/);
             
-            if (parts.length < 4) {
-                this.showTip(false, `第${i + 1}行格式错误：数据不完整`);
-                return { successCount, errorCount };
-            }
+            try {
+                // 校验数据完整性
+                if (parts.length < 4) {
+                    throw new Error(`第${i + 1}行格式错误：数据不完整`);
+                }
 
-            const drugName = parts[0];
-            const sourceName = parts[1];
-            const grams = parts[2];
-            const totalAmount = parts[3];
-            const remark = parts.slice(4).join(" ");
+                const drugName = parts[0];
+                const sourceName = parts[1];
+                const grams = parts[2];
+                const totalAmount = parts[3];
+                const remark = parts.slice(4).join(" ");
 
-            // 校验药物是否存在
-            const drug = drugMap.get(drugName);
-            if (!drug) {
-                this.showTip(false, `第${i + 1}行：药物"${drugName}"不存在`);
-                return { successCount, errorCount };
-            }
+                // 校验药物是否存在
+                const drug = drugMap.get(drugName);
+                if (!drug) {
+                    throw new Error(`第${i + 1}行：药物"${drugName}"不存在`);
+                }
 
-            // 校验来源是否存在
-            const source = sourceMap.get(sourceName);
-            if (!source) {
-                this.showTip(false, `第${i + 1}行：来源"${sourceName}"不存在`);
-                return { successCount, errorCount };
-            }
+                // 校验来源是否存在
+                const source = sourceMap.get(sourceName);
+                if (!source) {
+                    throw new Error(`第${i + 1}行：来源"${sourceName}"不存在`);
+                }
 
-            // 校验数值
-            if (isNaN(grams) || isNaN(totalAmount) || Number(grams) <= 0 || Number(totalAmount) <= 0) {
-                this.showTip(false, `第${i + 1}行：数值格式错误`);
-                return { successCount, errorCount };
-            }
+                // 校验数值
+                if (isNaN(grams) || isNaN(totalAmount) || Number(grams) <= 0 || Number(totalAmount) <= 0) {
+                    throw new Error(`第${i + 1}行：数值格式错误`);
+                }
 
-            // 新增入库
-            const stockInInfo = {
-                drugId: drug.id,
-                drugName: drug.name,
-                sourceId: source.id,
-                sourceName: source.name,
-                grams,
-                totalAmount,
-                remark
-            };
-            const result = await stockInManager.addStockIn(stockInInfo);
-            if (result.success) {
-                successCount++;
-            } else {
-                this.showTip(false, `第${i + 1}行：${result.message}`);
-                return { successCount, errorCount };
+                // 新增入库
+                const stockInInfo = {
+                    drugId: drug.id,
+                    drugName: drug.name,
+                    sourceId: source.id,
+                    sourceName: source.name,
+                    grams,
+                    totalAmount,
+                    remark
+                };
+                const result = await stockInManager.addStockIn(stockInInfo);
+                if (result.success) {
+                    successCount++;
+                } else {
+                    throw new Error(`第${i + 1}行：${result.message}`);
+                }
+            } catch (error) {
+                errorCount++;
+                errorMessages.push(error.message);
+                failedData.push(line);
             }
         }
 
+        // 显示所有错误信息和失败数据
+        if (errorMessages.length > 0) {
+            let errorText = errorMessages.join("\n") + "\n\n失败的数据：\n" + failedData.join("\n") + "\n\n请复制失败的数据进行修正后重新导入。";
+            this.showTip(false, errorText);
+        }
+
         return { successCount, errorCount };
+    }
+
+    /**
+     * 处理批量新增来源
+     */
+    async handleBatchAddSource() {
+        const text = document.getElementById("batchSourceText").value.trim();
+        if (!text) {
+            this.showTip(false, "请输入要添加的来源数据");
+            return;
+        }
+
+        try {
+            const { successCount, errorCount } = await this.importSources(text);
+            this.showTip(true, `批量添加完成：成功${successCount}条，失败${errorCount}条`);
+            
+            // 关闭弹窗并清空输入
+            this.batchSourcePopup.style.display = "none";
+            document.getElementById("batchSourceText").value = "";
+            
+            // 刷新相关数据
+            this.loadSourceSelect();
+            this.loadSourceList();
+        } catch (error) {
+            this.showTip(false, `批量添加失败：${error.message}`);
+        }
+    }
+
+    /**
+     * 处理批量新增药物
+     */
+    async handleBatchAddDrug() {
+        const text = document.getElementById("batchDrugText").value.trim();
+        if (!text) {
+            this.showTip(false, "请输入要添加的药物数据");
+            return;
+        }
+
+        try {
+            const { successCount, errorCount } = await this.importDrugs(text);
+            this.showTip(true, `批量添加完成：成功${successCount}条，失败${errorCount}条`);
+            
+            // 关闭弹窗并清空输入
+            this.batchDrugPopup.style.display = "none";
+            document.getElementById("batchDrugText").value = "";
+            
+            // 刷新相关数据
+            this.loadDrugSelect();
+            this.loadDrugList();
+        } catch (error) {
+            this.showTip(false, `批量添加失败：${error.message}`);
+        }
+    }
+
+    /**
+     * 处理批量入库
+     */
+    async handleBatchStockIn() {
+        const text = document.getElementById("batchStockInText").value.trim();
+        if (!text) {
+            this.showTip(false, "请输入要入库的药物数据");
+            return;
+        }
+
+        try {
+            const { successCount, errorCount } = await this.importStockIns(text);
+            this.showTip(true, `批量入库完成：成功${successCount}条，失败${errorCount}条`);
+            
+            // 关闭弹窗并清空输入
+            this.batchStockInPopup.style.display = "none";
+            document.getElementById("batchStockInText").value = "";
+            
+            // 刷新相关数据
+            this.loadStockInList();
+        } catch (error) {
+            this.showTip(false, `批量入库失败：${error.message}`);
+        }
     }
 
     /**
