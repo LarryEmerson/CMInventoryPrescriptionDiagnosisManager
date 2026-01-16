@@ -1193,6 +1193,7 @@ class App {
         let errorCount = 0;
         let errorMessages = [];
         let failedData = [];
+        let successIds = []; // 记录成功入库的ID，用于回滚
 
         // 先获取所有药物和来源数据，用于校验
         const drugs = await drugManager.getDrugList();
@@ -1200,69 +1201,174 @@ class App {
         const drugMap = new Map(drugs.map(d => [d.name, d]));
         const sourceMap = new Map(sources.map(s => [s.name, s]));
 
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
-            const parts = line.split(/\s+/);
-            
-            try {
-                // 校验数据完整性
-                if (parts.length < 4) {
-                    throw new Error(`第${i + 1}行格式错误：数据不完整`);
-                }
+        try {
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                const parts = line.split(/\s+/);
+                
+                try {
+                    // 校验数据完整性
+                    if (parts.length < 4) {
+                        throw new Error(`第${i + 1}行格式错误：数据不完整`);
+                    }
 
-                const drugName = parts[0];
-                const sourceName = parts[1];
-                const grams = parts[2];
-                const totalAmount = parts[3];
-                const remark = parts.slice(4).join(" ");
+                    const drugName = parts[0];
+                    const sourceName = parts[1];
+                    const grams = parts[2];
+                    const totalAmount = parts[3];
+                    const remark = parts.slice(4).join(" ");
 
-                // 校验药物是否存在
-                const drug = drugMap.get(drugName);
-                if (!drug) {
-                    throw new Error(`第${i + 1}行：药物"${drugName}"不存在`);
-                }
+                    // 校验药物是否存在
+                    const drug = drugMap.get(drugName);
+                    if (!drug) {
+                        throw new Error(`第${i + 1}行：药物"${drugName}"不存在`);
+                    }
 
-                // 校验来源是否存在
-                const source = sourceMap.get(sourceName);
-                if (!source) {
-                    throw new Error(`第${i + 1}行：来源"${sourceName}"不存在`);
-                }
+                    // 校验来源是否存在
+                    const source = sourceMap.get(sourceName);
+                    if (!source) {
+                        throw new Error(`第${i + 1}行：来源"${sourceName}"不存在`);
+                    }
 
-                // 校验数值
-                if (isNaN(grams) || isNaN(totalAmount) || Number(grams) <= 0 || Number(totalAmount) <= 0) {
-                    throw new Error(`第${i + 1}行：数值格式错误`);
-                }
+                    // 校验数值
+                    if (isNaN(grams) || isNaN(totalAmount) || Number(grams) <= 0 || Number(totalAmount) <= 0) {
+                        throw new Error(`第${i + 1}行：数值格式错误`);
+                    }
 
-                // 新增入库
-                const stockInInfo = {
-                    drugId: drug.id,
-                    drugName: drug.name,
-                    sourceId: source.id,
-                    sourceName: source.name,
-                    grams,
-                    totalAmount,
-                    remark
-                };
-                const result = await stockInManager.addStockIn(stockInInfo);
-                if (result.success) {
-                    successCount++;
-                } else {
-                    throw new Error(`第${i + 1}行：${result.message}`);
+                    // 新增入库
+                    const stockInInfo = {
+                        drugId: drug.id,
+                        drugName: drug.name,
+                        sourceId: source.id,
+                        sourceName: source.name,
+                        grams,
+                        totalAmount,
+                        remark
+                    };
+                    const result = await stockInManager.addStockIn(stockInInfo);
+                    if (result.success) {
+                        successCount++;
+                        successIds.push(result.data.id); // 记录成功入库的ID
+                    } else {
+                        throw new Error(`第${i + 1}行：${result.message}`);
+                    }
+                } catch (error) {
+                    errorCount++;
+                    errorMessages.push(error.message);
+                    failedData.push(line);
+                    // 出现错误，抛出异常，触发回滚
+                    throw new Error(`批量入库失败，已回滚操作：${error.message}`);
                 }
-            } catch (error) {
-                errorCount++;
-                errorMessages.push(error.message);
-                failedData.push(line);
             }
-        }
 
-        // 显示所有错误信息和失败数据
-        if (errorMessages.length > 0) {
-            let errorText = errorMessages.join("\n") + "\n\n失败的数据：\n" + failedData.join("\n") + "\n\n请复制失败的数据进行修正后重新导入。";
-            this.showTip(false, errorText);
-        }
+            // 没有错误，显示成功信息
+            if (errorMessages.length === 0) {
+                this.showTip(true, `批量入库成功：共${successCount}条记录`);
+            }
 
-        return { successCount, errorCount };
+            return { successCount, errorCount };
+        } catch (error) {
+            // 出现错误，回滚已经成功入库的数据
+            if (successIds.length > 0) {
+                for (const id of successIds) {
+                    await window.dbManager.deleteData("stockIns", id);
+                }
+            }
+
+            // 显示所有错误信息和失败数据
+            if (errorMessages.length > 0) {
+                // 显示失败记录弹窗
+                this.showFailedImportPopup(errorMessages, failedData);
+            }
+
+            return { successCount: 0, errorCount: errorCount + successIds.length };
+        }
+    }
+
+    /**
+     * 显示导入失败的弹窗
+     */
+    showFailedImportPopup(errorMessages, failedData) {
+        // 创建弹窗元素
+        const popup = document.createElement("div");
+        popup.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            max-height: 80vh;
+            background-color: #444;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            overflow-y: auto;
+            color: white;
+        `;
+
+        // 创建标题
+        const title = document.createElement("h2");
+        title.textContent = "批量入库失败记录";
+        title.style.marginBottom = "20px";
+        popup.appendChild(title);
+
+        // 创建错误信息区域
+        const errorSection = document.createElement("div");
+        errorSection.style.marginBottom = "20px";
+        const errorTitle = document.createElement("h3");
+        errorTitle.textContent = "错误信息：";
+        errorTitle.style.marginBottom = "10px";
+        errorSection.appendChild(errorTitle);
+        const errorList = document.createElement("ul");
+        errorList.style.marginLeft = "20px";
+        for (const message of errorMessages) {
+            const li = document.createElement("li");
+            li.textContent = message;
+            li.style.color = "red";
+            errorList.appendChild(li);
+        }
+        errorSection.appendChild(errorList);
+        popup.appendChild(errorSection);
+
+        // 创建失败数据区域
+        const failedSection = document.createElement("div");
+        failedSection.style.marginBottom = "20px";
+        const failedTitle = document.createElement("h3");
+        failedTitle.textContent = "失败的数据：";
+        failedTitle.style.marginBottom = "10px";
+        failedSection.appendChild(failedTitle);
+        const failedText = document.createElement("pre");
+        failedText.textContent = failedData.join("\n");
+        failedText.style.padding = "10px";
+        failedText.style.backgroundColor = "#666";
+        failedText.style.borderRadius = "3px";
+        failedText.style.fontSize = "14px";
+        failedText.style.color = "white";
+        failedSection.appendChild(failedText);
+        popup.appendChild(failedSection);
+
+        // 创建关闭按钮
+        const closeBtn = document.createElement("button");
+        closeBtn.textContent = "关闭";
+        closeBtn.style.cssText = `
+            display: block;
+            margin: 0 auto;
+            padding: 8px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        `;
+        closeBtn.addEventListener("click", () => {
+            document.body.removeChild(popup);
+        });
+        popup.appendChild(closeBtn);
+
+        // 添加到页面
+        document.body.appendChild(popup);
     }
 
     /**

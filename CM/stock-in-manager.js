@@ -43,8 +43,8 @@ class StockInManager {
                 remark: remark ? remark.trim() : ""
             };
 
-            await dbManager.addData(this.storeName, stockIn);
-            return { success: true, message: "药物入库成功" };
+            const data = await dbManager.addData(this.storeName, stockIn);
+            return { success: true, message: "药物入库成功", data };
         } catch (error) {
             console.error("新增入库记录失败：", error);
             return { success: false, message: `入库失败：${error.message}` };
