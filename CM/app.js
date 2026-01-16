@@ -14,6 +14,13 @@ class App {
         this.importPopupTitle = document.getElementById("importPopupTitle");
         this.importFormatExample = document.getElementById("importFormatExample");
         this.importTextArea = document.getElementById("importTextArea");
+        // 备份恢复相关DOM元素
+        this.backupBtn = document.getElementById("backupBtn");
+        this.restoreBtn = document.getElementById("restoreBtn");
+        this.restoreFileInput = null;
+        // Tab相关DOM元素
+        this.tabBtns = document.querySelectorAll(".tab-btn");
+        this.tabPanels = document.querySelectorAll(".tab-panel");
         // 当前导入类型
         this.currentImportType = null;
 
@@ -46,6 +53,24 @@ class App {
      * 绑定DOM事件
      */
     bindEvents() {
+        // 备份按钮事件
+        this.backupBtn.addEventListener("click", async () => {
+            await this.handleBackup();
+        });
+
+        // 恢复按钮事件
+        this.restoreBtn.addEventListener("click", () => {
+            this.handleRestore();
+        });
+
+        // Tab按钮事件
+        this.tabBtns.forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const tabId = e.target.dataset.tab;
+                this.switchTab(tabId);
+            });
+        });
+
         // 新增来源
         document.getElementById("addSourceBtn").addEventListener("click", async () => {
             const name = document.getElementById("sourceName").value;
@@ -56,8 +81,9 @@ class App {
             if (result.success) {
                 document.getElementById("sourceName").value = "";
                 document.getElementById("sourceRemark").value = "";
-                // 刷新来源下拉框
+                // 刷新来源下拉框和来源列表
                 this.loadSourceSelect();
+                this.loadSourceList();
             }
         });
 
@@ -76,8 +102,9 @@ class App {
                 document.getElementById("drugName").value = "";
                 document.getElementById("minStock").value = "100";
                 document.getElementById("defaultEstimate").value = "10";
-                // 刷新药物下拉框
+                // 刷新药物下拉框和药物列表
                 this.loadDrugSelect();
+                this.loadDrugList();
             }
         });
 
@@ -101,6 +128,8 @@ class App {
                 document.getElementById("stockInGrams").value = "500";
                 document.getElementById("stockInAmount").value = "100.00";
                 document.getElementById("stockInRemark").value = "";
+                // 刷新入库记录
+                this.loadStockInList();
             }
         });
 
@@ -149,6 +178,34 @@ class App {
                 }, 1000);
             }
         });
+    }
+
+    /**
+     * 切换Tab面板
+     * @param {string} tabId 要切换的Tab ID
+     */
+    switchTab(tabId) {
+        // 移除所有Tab按钮的active类
+        this.tabBtns.forEach(btn => {
+            btn.classList.remove("active");
+        });
+
+        // 移除所有Tab面板的active类
+        this.tabPanels.forEach(panel => {
+            panel.classList.remove("active");
+        });
+
+        // 添加当前Tab按钮的active类
+        const currentBtn = document.querySelector(`[data-tab="${tabId}"]`);
+        if (currentBtn) {
+            currentBtn.classList.add("active");
+        }
+
+        // 添加当前Tab面板的active类
+        const currentPanel = document.getElementById(tabId);
+        if (currentPanel) {
+            currentPanel.classList.add("active");
+        }
     }
 
     /**
@@ -342,9 +399,13 @@ class App {
         drugListEl.innerHTML = "";
 
         stats.drugList.forEach(drug => {
-            const li = document.createElement("li");
-            li.textContent = `${drug.name}：${drug.grams}g，${drug.amount}元`;
-            drugListEl.appendChild(li);
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${drug.name}</td>
+                <td>${drug.grams}</td>
+                <td>${drug.amount}</td>
+            `;
+            drugListEl.appendChild(row);
         });
     }
 
@@ -359,9 +420,13 @@ class App {
         warningListEl.innerHTML = "";
 
         stats.list.forEach(drug => {
-            const li = document.createElement("li");
-            li.textContent = `${drug.name}（当前库存：${drug.currentStock}g，预警阈值：${drug.minStock}g）`;
-            warningListEl.appendChild(li);
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${drug.name}</td>
+                <td>${drug.currentStock}</td>
+                <td>${drug.minStock}</td>
+            `;
+            warningListEl.appendChild(row);
         });
     }
     
@@ -1006,9 +1071,133 @@ class App {
 
         return { successCount, errorCount };
     }
+
+    /**
+     * 处理备份功能
+     */
+    async handleBackup() {
+        try {
+            // 获取所有表的数据
+            const backupData = {
+                sources: await dbManager.getAllData('sources'),
+                drugs: await dbManager.getAllData('drugs'),
+                stockIns: await dbManager.getAllData('stockIns'),
+                stockOuts: await dbManager.getAllData('stockOuts'),
+                prescriptions: await dbManager.getAllData('prescriptions'),
+                diagnosisLogs: await dbManager.getAllData('diagnosisLogs')
+            };
+
+            // 生成文件名：中药诊疗管理数据_YYYY-MM-DD-HH-mm-ss.json
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const fileName = `中药诊疗管理数据_${year}-${month}-${day}-${hours}-${minutes}-${seconds}.json`;
+
+            // 创建JSON文件并下载
+            const jsonString = JSON.stringify(backupData, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            this.showTip(true, '备份成功！');
+        } catch (error) {
+            console.error('备份失败:', error);
+            this.showTip(false, '备份失败：' + error.message);
+        }
+    }
+
+    /**
+     * 处理恢复功能
+     */
+    handleRestore() {
+        // 创建文件输入元素
+        if (!this.restoreFileInput) {
+            this.restoreFileInput = document.createElement('input');
+            this.restoreFileInput.type = 'file';
+            this.restoreFileInput.accept = '.json';
+            this.restoreFileInput.style.display = 'none';
+            
+            // 监听文件选择事件
+            this.restoreFileInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    await this.processRestoreFile(file);
+                }
+                // 清空文件选择
+                this.restoreFileInput.value = '';
+            });
+            
+            document.body.appendChild(this.restoreFileInput);
+        }
+        
+        // 触发文件选择
+        this.restoreFileInput.click();
+    }
+
+    /**
+     * 处理恢复文件
+     */
+    async processRestoreFile(file) {
+        try {
+            // 读取文件内容
+            const content = await this.readFile(file);
+            const restoreData = JSON.parse(content);
+
+            // 导入数据到数据库
+            for (const storeName in restoreData) {
+                if (restoreData.hasOwnProperty(storeName)) {
+                    const dataList = restoreData[storeName];
+                    for (const data of dataList) {
+                        // 先删除可能存在的旧数据（根据id）
+                        try {
+                            await dbManager.deleteData(storeName, data.id);
+                        } catch (error) {
+                            // 如果数据不存在，忽略错误
+                        }
+                        // 导入新数据
+                        await dbManager.addData(storeName, data);
+                    }
+                }
+            }
+
+            this.showTip(true, '恢复成功！');
+            
+            // 刷新页面
+            setTimeout(async () => {
+                await this.refreshPage();
+                this.currentPrescriptionDrugs = [];
+                this.renderPrescriptionDrugs();
+            }, 1000);
+        } catch (error) {
+            console.error('恢复失败:', error);
+            this.showTip(false, '恢复失败：' + error.message);
+        }
+    }
+
+    /**
+     * 读取文件内容
+     */
+    readFile(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.onerror = (e) => reject(new Error('文件读取失败'));
+            reader.readAsText(file);
+        });
+    }
 }
 
 // 页面加载完成后初始化应用
 window.onload = () => {
-    new App();
+    window.app = new App();
 };

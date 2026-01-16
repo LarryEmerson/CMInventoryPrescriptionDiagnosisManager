@@ -8,19 +8,32 @@
         * {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+            /* box-sizing: border-box; */
             font-family: "Microsoft YaHei", sans-serif;
         } 
+        .body {
+            padding: 10px;
+        }
         .container {
-            width: 95%;
-            margin: 20px auto;
-            background-color: aliceblue;
+            width: 100%;
+            margin: 10px  ;
+            /* background-color: aliceblue; */
         }
         .module {
-            margin: 20px 0;
-            padding: 15px;
-            border: 1px solid #ccc;
+            /* margin: 20px 0;
+            padding: 15px; */
+            /* border: 1px solid #e0e0e0; */
             border-radius: 8px;
+            /* background-color: white; */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: box-shadow 0.3s ease;
+        }
+         .module-tab {
+                margin: 15px 0;
+                padding: 5px 0 0 0 ;
+            }
+        .module:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         .module-title {
             font-size: 18px;
@@ -35,9 +48,16 @@
             gap: 15px;
         }
         .stats-card {
-            padding: 10px;
-            border: 1px solid #eee;
-            border-radius: 4px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .stats-card:hover {
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
         }
         .form-group {
             margin: 10px 0;
@@ -49,25 +69,61 @@
             margin-right: 10px;
         }
         input, select, textarea {
-            padding: 5px;
+            padding: 8px 12px;
             width: 250px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background-color: white;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #4285f4;
+            box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 80px;
         }
         button {
-            padding: 6px 12px;
+            padding: 8px 16px;
             background-color: #4285f4;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
             margin: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
+        
         button:hover {
             background-color: #3367d6;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+        }
+        
+        button:active {
+            background-color: #2a56c6;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transform: translateY(0);
+        }
+        
+        button:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.3);
         }
         .warning-list {
+            margin-top: 10px;
             color: #d93025;
+        }
+        .warning-text{
+            font-size: 12px;
+            color:#dc6259
         }
         .prescription-drug-item {
             margin: 10px 0;
@@ -118,22 +174,87 @@
             z-index: 999;
         }
         
+        /* 标题栏样式 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: #4285f4;
+            color: white;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .system-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .header-buttons button {
+            background-color: white;
+            color: #4285f4;
+            font-size: 14px;
+            padding: 6px 12px;
+        }
+        
+        .header-buttons button:hover {
+            background-color: #f5f5f5;
+        }
+        
         /* 响应式设计 - 适配移动端 */
         @media (max-width: 768px) {
+            /* 容器适配 */
             .container {
-                width: 98%;
-                margin: 10px auto;
+                width: 100%;
+                margin: 0px;
+                padding: 0px;
+            }
+            
+            /* 标题栏适配 */
+            .header {
+                padding: 12px;
+                margin-bottom: 15px;
+            }
+            
+            .system-title {
+                font-size: 18px;
+            }
+            
+            .header-buttons button {
+                font-size: 13px;
+                padding: 5px 10px;
             }
             
             /* 网格布局改为单列 */
             .stats-grid {
                 grid-template-columns: 1fr;
+                gap: 10px;
             }
             
             .diagnosis-grid {
                 grid-template-columns: 1fr;
+                gap: 10px;
             }
             
+            /* 模块适配 */
+            .module {
+                /* margin: 15px 0;
+                padding: 15px; */
+            }
+             .module-tab {
+                margin: 15px 0;
+                padding: 5px 0 0 0 ;
+            }
             /* 表单元素适配 */
             .form-group {
                 margin: 15px 0;
@@ -145,28 +266,43 @@
                 text-align: left;
                 margin-right: 0;
                 margin-bottom: 5px;
+                font-size: 14px;
             }
             
             input, select, textarea {
                 width: 100%;
+                padding: 8px;
+                font-size: 14px;
             }
             
             /* 按钮样式 */
             button {
-                width: 100%;
-                margin: 5px 0;
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+            
+            /* Tab标签适配 */
+            .tab-content {
+                padding: 15px;
+            }
+            
+            .tab-btn {
+                padding: 10px 14px;
+                font-size: 13px;
             }
             
             /* 弹窗适配 */
             .popup-content {
-                width: 90% !important;
-                max-width: 500px;
-                margin: 20px;
+                width: 95% !important;
+                max-width: none;
+                margin: 15px;
+                padding: 15px;
             }
             
             /* 字体大小优化 */
             .module-title {
                 font-size: 16px;
+                margin-bottom: 15px;
             }
             
             h3 {
@@ -175,6 +311,28 @@
             
             h4 {
                 font-size: 14px;
+                margin-bottom: 10px;
+            }
+            
+            /* 表格适配 */
+            .drug-table {
+                font-size: 13px;
+            }
+            
+            .drug-table th, .drug-table td {
+                padding: 6px;
+            }
+            
+            /* 记录样式适配 */
+            .stock-in-item, .record-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .drug-info {
+                flex-direction: column;
+                gap: 3px;
             }
             
             /* 药物选择项适配 */
@@ -189,8 +347,9 @@
             
             /* 提示框位置 */
             .tip-box {
-                left: 20px;
-                right: 20px;
+                left: 10px;
+                right: 10px;
+                padding: 10px 15px;
             }
         }
         .tip-success {
@@ -212,437 +371,720 @@
             width: 100%;
             border-collapse: collapse;
             margin: 10px 0;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
+        
         .drug-table th, .drug-table td {
-            border: 1px solid #eee;
-            padding: 8px;
+            border: 1px solid #e0e0e0;
+            padding: 10px;
             text-align: left;
+            font-size: 14px;
         }
+        
         .drug-table th {
-            background-color: #f5f5f5;
+            background-color: #f8f9fa;
             font-weight: bold;
+            color: #333;
         }
+        
         .drug-table tr {
             cursor: pointer;
+            transition: all 0.3s ease;
         }
+        
         .drug-table tr:hover {
-            background-color: #f0f8ff;
+            background-color: #f5f5f5;
+        }
+        
+        .drug-table tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+        
+        .drug-table tr:nth-child(even):hover {
+            background-color: #f0f0f0;
         }
         /* 弹窗内容自适应表格 */
         .popup-content {
             width: 600px; /* 加宽弹窗适配表格 */
         }
+
+        /* Tab标签样式 */
+        .tab-container {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .tab-header {
+            display: flex;
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #eee;
+            overflow-x: auto;
+            overflow-y: hidden;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tab-btn {
+            padding: 12px 16px;
+            border: none;
+            background-color: transparent;
+            color: #333;
+            cursor: pointer;
+            font-size: 14px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            background-color: #e8e8e8;
+        }
+
+        .tab-btn.active {
+            color: #4285f4;
+            border-bottom-color: #4285f4;
+            background-color: white;
+        }
+
+        .tab-content {
+            padding: 20px;
+            background-color: white;
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        /* 入库记录样式 */
+        .date-group {
+            margin-bottom: 20px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .date-header {
+            background-color: #f5f5f5;
+            padding: 8px 15px;
+            font-weight: bold;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stock-in-records {
+            padding: 10px;
+        }
+
+        .stock-in-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stock-in-item:last-child {
+            border-bottom: none;
+        }
+
+        .stock-in-info {
+            flex: 1;
+        }
+
+        .drug-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .drug-name {
+            font-weight: bold;
+        }
+
+        .drug-amount {
+            color: #666;
+        }
+
+        .source-info {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .stock-in-details {
+            margin-left: 15px;
+        }
+
+        /* 出库记录样式 */
+        .stock-out-record {
+            border: 1px solid #eee;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            padding: 10px;
+        }
+
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .record-time {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .record-content {
+            padding-left: 10px;
+            border-left: 3px solid #4285f4;
+        }
+
+        .detail-btn {
+            padding: 4px 8px;
+            font-size: 12px;
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .detail-btn:hover {
+            background-color: #3367d6;
+        }
+
+        .no-records {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
     </style>
 </head>
-<body>
+<body class="body">
 <div class="container">
     <!-- 提示框 -->
     <div class="tip-box" id="tipBox"></div>
+    
+    <!-- 标题栏 -->
+    <div class="header">
+        <h1 class="system-title">中药诊疗管理系统</h1>
+        <div class="header-buttons">
+            <button id="restoreBtn">恢复</button>
+            <button id="backupBtn">备份</button>
+        </div>
+    </div>
 
     <!-- 统计模块 -->
     <div class="module">
-        <div class="module-title">数据统计</div>
+        <!-- <div class="module-title">数据统计</div> -->
         <div class="stats-grid">
             <div class="stats-card">
                 <h3>昨日统计</h3>
-                <p>总克数：<span id="yesterdayTotalGrams">0</span>g</p>
-                <p>总种类：<span id="yesterdayTotalTypes">0</span>种</p>
-                <p>总金额：<span id="yesterdayTotalAmount">0</span>元</p>
+                <p>总量：<span id="yesterdayTotalGrams">0</span>g</p>
+                <p>种类：<span id="yesterdayTotalTypes">0</span>种</p>
+                <p>总额：<span id="yesterdayTotalAmount">0</span>元</p>
                 <div>
                     <h4>详情列表</h4>
-                    <ul id="yesterdayDrugList"></ul>
+                    <table class="drug-table">
+                        <thead>
+                            <tr>
+                                <th>药物</th>
+                                <th>用量(g)</th>
+                                <th>金额(元)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="yesterdayDrugList"></tbody>
+                    </table>
                 </div>
             </div>
             <div class="stats-card">
                 <h3>今日统计</h3>
-                <p>总克数：<span id="todayTotalGrams">0</span>g</p>
-                <p>总种类：<span id="todayTotalTypes">0</span>种</p>
-                <p>总金额：<span id="todayTotalAmount">0</span>元</p>
+                <p>总量：<span id="todayTotalGrams">0</span>g</p>
+                <p>种类：<span id="todayTotalTypes">0</span>种</p>
+                <p>总额：<span id="todayTotalAmount">0</span>元</p>
                 <div>
                     <h4>详情列表</h4>
-                    <ul id="todayDrugList"></ul>
+                    <table class="drug-table">
+                        <thead>
+                            <tr>
+                                <th>药物</th>
+                                <th>用量(g)</th>
+                                <th>金额(元)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="todayDrugList"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
         <div class="warning-list">
-            <h3>库存预警列表</h3>
-            <p>预警数量：<span id="warningCount">0</span>种</p>
-            <ul id="warningDrugList"></ul>
+            <h3>预警列表  <span class="warning-text">共<span id="warningCount">0</span>种</span></h3> 
+             
+            
+            <table class="drug-table">
+                <thead>
+                    <tr>
+                        <th>药物</th>
+                        <th>当前库存(g)</th>
+                        <th>预警阈值(g)</th>
+                    </tr>
+                </thead>
+                <tbody id="warningDrugList"></tbody>
+            </table>
         </div>
     </div>
 
-    <!-- 基础数据管理 -->
-    <div class="module">
-        <div class="module-title">基础数据管理</div>
-
-        <!-- 新增来源 -->
-        <div class="form-group">
-            <h4>新增药物来源</h4>
-            <label for="sourceName">来源名称：</label>
-            <input type="text" id="sourceName" placeholder="输入来源名称">
-            <label for="sourceRemark">来源备注：</label>
-            <input type="text" id="sourceRemark" placeholder="输入来源备注">
-            <button id="addSourceBtn">新增来源</button>
-        </div>
-
-        <!-- 新增药物 -->
-        <div class="form-group">
-            <h4>新增中药药物</h4>
-            <label for="drugName">药物名称：</label>
-            <input type="text" id="drugName" placeholder="输入药物名称">
-            <label for="storageType">存储方式：</label>
-            <select id="storageType">
-                <option value="密封">密封</option>
-                <option value="冷藏">冷藏</option>
-            </select>
-            <label for="minStock">预警阈值(g)：</label>
-            <input type="number" id="minStock" min="0" step="1" value="100">
-            <label for="defaultEstimate">默认预估量(g)：</label>
-            <input type="number" id="defaultEstimate" min="1" step="1" value="10">
-            <button id="addDrugBtn">新增药物</button>
-        </div>
-
-        <!-- 新增入库 -->
-        <div class="form-group">
-            <h4>药物入库</h4>
-            <label for="stockInDrug">选择药物：</label>
-            <select id="stockInDrug"></select>
-            <label for="stockInSource">选择来源：</label>
-            <select id="stockInSource"></select>
-            <label for="stockInGrams">入库克数(g)：</label>
-            <input type="number" id="stockInGrams" min="1" step="1" value="500">
-            <label for="stockInAmount">入库总金额(元)：</label>
-            <input type="number" id="stockInAmount" min="0.01" step="0.01" value="100.00">
-            <label for="stockInRemark">入库备注：</label>
-            <input type="text" id="stockInRemark" placeholder="输入入库备注">
-            <button id="addStockInBtn">确认入库</button>
-        </div>
-    </div>
-
-    <!-- 开方管理模块 -->
-    <div class="module">
-        <div class="module-title">开方管理</div>
-        <h4>上次开方记录（可修改/删除）</h4>
-        <div id="prescriptionDrugList"></div>
-        <button id="addDrugToPresBtn">新增药物到开方</button>
-
-        <!-- 药物选择弹窗 -->
-        <div class="popup" id="drugSelectPopup">
-            <div class="popup-content">
-                <h3>选择药物</h3>
-                <div id="selectableDrugList"></div>
-                <button id="closePopupBtn">关闭</button>
+    <!-- Tab标签组件 -->
+    <div class="module-tab">
+        <div class="tab-container">
+            <!-- Tab标签 -->
+            <div class="tab-header">
+                <button class="tab-btn active" data-tab="prescription">开方</button>
+                <button class="tab-btn" data-tab="stockOut">出库记录</button>
+                <button class="tab-btn" data-tab="dataManager">数据管理</button>
+                <button class="tab-btn" data-tab="stockIn">入库记录</button>
+                <button class="tab-btn" data-tab="drugs">药物</button>
+                <button class="tab-btn" data-tab="sources">来源</button>
             </div>
-        </div>
 
-        <!-- 诊疗日志录入 -->
-        <div class="module" style="margin-top: 20px;">
-            <div class="module-title">诊疗日志录入</div>
-            <div class="diagnosis-grid">
-                <!-- 第1列：尿液情况 + 运动情况 -->
-                <div>
-                    <h4>尿液情况</h4>
-                    <div class="form-group">
-                        <label for="nightUrineVolume">夜尿尿量：</label>
-                        <select id="nightUrineVolume">
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                            <option value="6">6</option>
-                            <option value="7">7</option>
-                            <option value="8">8</option>
-                            <option value="9">9</option>
-                            <option value="10">10</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="nightUrineFoam">夜尿泡沫：</label>
-                        <select id="nightUrineFoam">
-                            <option value="有">有</option>
-                            <option value="无">无</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="nightUrineColor">夜尿颜色：</label>
-                        <select id="nightUrineColor">
-                            <option value="白">白</option>
-                            <option value="黄">黄</option>
-                            <option value="橙赤">橙赤</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="nightUrineDeposit">夜尿沉淀量：</label>
-                        <select id="nightUrineDeposit">
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                            <option value="6">6</option>
-                            <option value="7">7</option>
-                            <option value="8">8</option>
-                            <option value="9">9</option>
-                            <option value="10">10</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="nightUrineDepositColor">沉淀颜色：</label>
-                        <select id="nightUrineDepositColor">
-                            <option value="白">白</option>
-                            <option value="黄">黄</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="shortUrineVolume">短尿尿量：</label>
-                        <select id="shortUrineVolume">
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                            <option value="6">6</option>
-                            <option value="7">7</option>
-                            <option value="8">8</option>
-                            <option value="9">9</option>
-                            <option value="10">10</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="shortUrineColor">短尿颜色：</label>
-                        <select id="shortUrineColor">
-                            <option value="白">白</option>
-                            <option value="黄">黄</option>
-                            <option value="橙赤">橙赤</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="shortUrineRemark">短尿备注：</label>
-                        <textarea id="shortUrineRemark" rows="2"></textarea>
-                    </div>
-                    <h4>大便情况</h4>
-                    <div class="form-group">
-                        <label for="stoolColor">大便颜色：</label>
-                        <select id="stoolColor">
-                            <option value="黄色">黄色</option>
-                            <option value="褐色">褐色</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="stoolShape">大便形状：</label>
-                        <select id="stoolShape">
-                            <option value="稍成型">稍成型</option>
-                            <option value="不成形糊状">不成形糊状</option>
-                            <option value="不成形絮状">不成形絮状</option>
-                            <option value="成型">成型</option>
-                        </select>
-                    </div>
+            <!-- Tab内容 -->
+            <div class="tab-content">
+                <!-- 开方标签内容 -->
+                <div id="prescription" class="tab-panel active">
+                    <div class="module">
+                        <div class="module-title">开方管理</div>
+                        <h4>上次开方记录（可修改/删除）</h4>
+                        <div id="prescriptionDrugList"></div>
+                        <button id="addDrugToPresBtn">新增药物到开方</button>
 
-                    <h4>运动情况</h4>
-                    <div class="form-group">
-                        <label for="exerciseMorning">早晨：</label>
-                        <select id="exerciseMorning">
-                            <option value="无">无</option>
-                            <option value="步行">步行</option>
-                            <option value="八段锦">八段锦</option>
-                            <option value="金刚功">金刚功</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="exerciseNoon">中午：</label>
-                        <select id="exerciseNoon">
-                            <option value="无">无</option>
-                            <option value="步行">步行</option>
-                            <option value="八段锦">八段锦</option>
-                            <option value="金刚功">金刚功</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="exerciseEvening">晚上：</label>
-                        <select id="exerciseEvening">
-                            <option value="无">无</option>
-                            <option value="步行">步行</option>
-                            <option value="八段锦">八段锦</option>
-                            <option value="金刚功">金刚功</option>
-                        </select>
+                        <!-- 药物选择弹窗 -->
+                        <div class="popup" id="drugSelectPopup">
+                            <div class="popup-content">
+                                <h3>选择药物</h3>
+                                <div id="selectableDrugList"></div>
+                                <button id="closePopupBtn">关闭</button>
+                            </div>
+                        </div>
+
+                        <!-- 诊疗日志录入 -->
+                        <div class="module" style="margin-top: 20px;">
+                            <div class="module-title">诊疗日志录入</div>
+                            <div class="diagnosis-grid">
+                                <!-- 第1列：尿液情况 + 运动情况 -->
+                                <div>
+                                    <h4>尿液情况</h4>
+                                    <div class="form-group">
+                                        <label for="nightUrineVolume">夜尿尿量：</label>
+                                        <select id="nightUrineVolume">
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>
+                                            <option value="5">5</option>
+                                            <option value="6">6</option>
+                                            <option value="7">7</option>
+                                            <option value="8">8</option>
+                                            <option value="9">9</option>
+                                            <option value="10">10</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="nightUrineFoam">夜尿泡沫：</label>
+                                        <select id="nightUrineFoam">
+                                            <option value="有">有</option>
+                                            <option value="无">无</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="nightUrineColor">夜尿颜色：</label>
+                                        <select id="nightUrineColor">
+                                            <option value="白">白</option>
+                                            <option value="黄">黄</option>
+                                            <option value="橙赤">橙赤</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="nightUrineDeposit">夜尿沉淀量：</label>
+                                        <select id="nightUrineDeposit">
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>
+                                            <option value="5">5</option>
+                                            <option value="6">6</option>
+                                            <option value="7">7</option>
+                                            <option value="8">8</option>
+                                            <option value="9">9</option>
+                                            <option value="10">10</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="nightUrineDepositColor">沉淀颜色：</label>
+                                        <select id="nightUrineDepositColor">
+                                            <option value="白">白</option>
+                                            <option value="黄">黄</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="shortUrineVolume">短尿尿量：</label>
+                                        <select id="shortUrineVolume">
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>
+                                            <option value="5">5</option>
+                                            <option value="6">6</option>
+                                            <option value="7">7</option>
+                                            <option value="8">8</option>
+                                            <option value="9">9</option>
+                                            <option value="10">10</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="shortUrineColor">短尿颜色：</label>
+                                        <select id="shortUrineColor">
+                                            <option value="白">白</option>
+                                            <option value="黄">黄</option>
+                                            <option value="橙赤">橙赤</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="shortUrineRemark">短尿备注：</label>
+                                        <textarea id="shortUrineRemark" rows="2"></textarea>
+                                    </div>
+                                    <h4>大便情况</h4>
+                                    <div class="form-group">
+                                        <label for="stoolColor">大便颜色：</label>
+                                        <select id="stoolColor">
+                                            <option value="黄色">黄色</option>
+                                            <option value="褐色">褐色</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="stoolShape">大便形状：</label>
+                                        <select id="stoolShape">
+                                            <option value="稍成型">稍成型</option>
+                                            <option value="不成形糊状">不成形糊状</option>
+                                            <option value="不成形絮状">不成形絮状</option>
+                                            <option value="成型">成型</option>
+                                        </select>
+                                    </div>
+
+                                    <h4>运动情况</h4>
+                                    <div class="form-group">
+                                        <label for="exerciseMorning">早晨：</label>
+                                        <select id="exerciseMorning">
+                                            <option value="无">无</option>
+                                            <option value="步行">步行</option>
+                                            <option value="八段锦">八段锦</option>
+                                            <option value="金刚功">金刚功</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="exerciseNoon">中午：</label>
+                                        <select id="exerciseNoon">
+                                            <option value="无">无</option>
+                                            <option value="步行">步行</option>
+                                            <option value="八段锦">八段锦</option>
+                                            <option value="金刚功">金刚功</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="exerciseEvening">晚上：</label>
+                                        <select id="exerciseEvening">
+                                            <option value="无">无</option>
+                                            <option value="步行">步行</option>
+                                            <option value="八段锦">八段锦</option>
+                                            <option value="金刚功">金刚功</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- 第2列：睡眠情况 + 其他情况 -->
+                                <div> 
+                                    <h4>睡眠情况</h4>
+                                    <div class="form-group">
+                                        <label for="sleepNoon">午间：</label>
+                                        <select id="sleepNoon" class="sleep-select">
+                                            <option value="无睡眠">无睡眠</option>
+                                            <option value="似睡非睡">似睡非睡</option>
+                                            <option value="浅睡">浅睡</option>
+                                            <option value="多梦">多梦</option>
+                                            <option value="沉睡">沉睡</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group sleep-time-item">
+                                        <label for="sleep9">晚9点：</label>
+                                        <select id="sleep9" class="sleep-select">
+                                            <option value="无睡眠">无睡眠</option>
+                                            <option value="似睡非睡">似睡非睡</option>
+                                            <option value="浅睡">浅睡</option>
+                                            <option value="多梦">多梦</option>
+                                            <option value="沉睡">沉睡</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group sleep-time-item">
+                                        <label for="sleep10">晚10点：</label>
+                                        <select id="sleep10" class="sleep-select">
+                                            <option value="无睡眠">无睡眠</option>
+                                            <option value="似睡非睡">似睡非睡</option>
+                                            <option value="浅睡">浅睡</option>
+                                            <option value="多梦">多梦</option>
+                                            <option value="沉睡">沉睡</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group sleep-time-item">
+                                        <label for="sleep11">晚11点：</label>
+                                        <select id="sleep11" class="sleep-select">
+                                            <option value="无睡眠">无睡眠</option>
+                                            <option value="似睡非睡">似睡非睡</option>
+                                            <option value="浅睡">浅睡</option>
+                                            <option value="多梦">多梦</option>
+                                            <option value="沉睡">沉睡</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group sleep-time-item">
+                                        <label for="sleep12">夜12点：</label>
+                                        <select id="sleep12" class="sleep-select">
+                                            <option value="无睡眠">无睡眠</option>
+                                            <option value="似睡非睡">似睡非睡</option>
+                                            <option value="浅睡">浅睡</option>
+                                            <option value="多梦">多梦</option>
+                                            <option value="沉睡">沉睡</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group sleep-time-item">
+                                        <label for="sleep1">凌晨1点：</label>
+                                        <select id="sleep1" class="sleep-select">
+                                            <option value="无睡眠">无睡眠</option>
+                                            <option value="似睡非睡">似睡非睡</option>
+                                            <option value="浅睡">浅睡</option>
+                                            <option value="多梦">多梦</option>
+                                            <option value="沉睡">沉睡</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group sleep-time-item">
+                                        <label for="sleep2">凌晨2点：</label>
+                                        <select id="sleep2" class="sleep-select">
+                                            <option value="无睡眠">无睡眠</option>
+                                            <option value="似睡非睡">似睡非睡</option>
+                                            <option value="浅睡">浅睡</option>
+                                            <option value="多梦">多梦</option>
+                                            <option value="沉睡">沉睡</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group sleep-time-item">
+                                        <label for="sleep3">凌晨3点：</label>
+                                        <select id="sleep3" class="sleep-select">
+                                            <option value="无睡眠">无睡眠</option>
+                                            <option value="似睡非睡">似睡非睡</option>
+                                            <option value="浅睡">浅睡</option>
+                                            <option value="多梦">多梦</option>
+                                            <option value="沉睡">沉睡</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group sleep-time-item">
+                                        <label for="sleep4">凌晨4点：</label>
+                                        <select id="sleep4" class="sleep-select">
+                                            <option value="无睡眠">无睡眠</option>
+                                            <option value="似睡非睡">似睡非睡</option>
+                                            <option value="浅睡">浅睡</option>
+                                            <option value="多梦">多梦</option>
+                                            <option value="沉睡">沉睡</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group sleep-time-item">
+                                        <label for="sleep5">凌晨5点：</label>
+                                        <select id="sleep5" class="sleep-select">
+                                            <option value="无睡眠">无睡眠</option>
+                                            <option value="似睡非睡">似睡非睡</option>
+                                            <option value="浅睡">浅睡</option>
+                                            <option value="多梦">多梦</option>
+                                            <option value="沉睡">沉睡</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group sleep-time-item">
+                                        <label for="sleep6">早6点：</label>
+                                        <select id="sleep6" class="sleep-select">
+                                            <option value="无睡眠">无睡眠</option>
+                                            <option value="似睡非睡">似睡非睡</option>
+                                            <option value="浅睡">浅睡</option>
+                                            <option value="多梦">多梦</option>
+                                            <option value="沉睡">沉睡</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group sleep-time-item">
+                                        <label for="sleep7">早7点：</label>
+                                        <select id="sleep7" class="sleep-select">
+                                            <option value="无睡眠">无睡眠</option>
+                                            <option value="似睡非睡">似睡非睡</option>
+                                            <option value="浅睡">浅睡</option>
+                                            <option value="多梦">多梦</option>
+                                            <option value="沉睡">沉睡</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="sleepAssist">睡眠辅助：</label>
+                                        <input type="text" id="sleepAssist" placeholder="洗脚、热水袋等">
+                                    </div>
+
+                                    <h4>其他情况</h4>
+                                    <div class="form-group">
+                                        <label for="morningWeak">晨起无力：</label>
+                                        <select id="morningWeak">
+                                            <option value="是">是</option>
+                                            <option value="否">否</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="dietBloating">腹胀：</label>
+                                        <select id="dietBloating">
+                                            <option value="是">是</option>
+                                            <option value="否">否</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="dietAbdominalPain">腹痛：</label>
+                                        <select id="dietAbdominalPain">
+                                            <option value="是">是</option>
+                                            <option value="否">否</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="dietAppetite">无食欲：</label>
+                                        <select id="dietAppetite">
+                                            <option value="是">是</option>
+                                            <option value="否">否</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="hasDiarrhea">腹泻：</label>
+                                        <select id="hasDiarrhea">
+                                            <option value="是">是</option>
+                                            <option value="否">否</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="otherRemark">其他备注：</label>
+                                        <textarea id="otherRemark" rows="3"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 提交开方按钮 -->
+                        <button id="submitPrescriptionBtn" style="margin-top: 20px; font-size: 16px;">提交开方并保存诊疗日志</button>
                     </div>
                 </div>
 
-                <!-- 第2列：大便情况 + 睡眠情况 + 其他情况 -->
-                <div> 
-                    <h4>睡眠情况</h4>
-                    <div class="form-group">
-                        <label for="sleepNoon">午间：</label>
-                        <select id="sleepNoon" class="sleep-select">
-                            <option value="无睡眠">无睡眠</option>
-                            <option value="似睡非睡">似睡非睡</option>
-                            <option value="浅睡">浅睡</option>
-                            <option value="多梦">多梦</option>
-                            <option value="沉睡">沉睡</option>
-                        </select>
+                <!-- 出库记录标签内容 -->
+                <div id="stockOut" class="tab-panel">
+                    <div class="module">
+                        <div class="module-title">出库记录</div>
+                        <div id="stockOutList"></div>
                     </div>
-                    <div class="form-group sleep-time-item">
-                        <label for="sleep9">晚9点：</label>
-                        <select id="sleep9" class="sleep-select">
-                            <option value="无睡眠">无睡眠</option>
-                            <option value="似睡非睡">似睡非睡</option>
-                            <option value="浅睡">浅睡</option>
-                            <option value="多梦">多梦</option>
-                            <option value="沉睡">沉睡</option>
-                        </select>
-                    </div>
-                    <div class="form-group sleep-time-item">
-                        <label for="sleep10">晚10点：</label>
-                        <select id="sleep10" class="sleep-select">
-                            <option value="无睡眠">无睡眠</option>
-                            <option value="似睡非睡">似睡非睡</option>
-                            <option value="浅睡">浅睡</option>
-                            <option value="多梦">多梦</option>
-                            <option value="沉睡">沉睡</option>
-                        </select>
-                    </div>
-                    <div class="form-group sleep-time-item">
-                        <label for="sleep11">晚11点：</label>
-                        <select id="sleep11" class="sleep-select">
-                            <option value="无睡眠">无睡眠</option>
-                            <option value="似睡非睡">似睡非睡</option>
-                            <option value="浅睡">浅睡</option>
-                            <option value="多梦">多梦</option>
-                            <option value="沉睡">沉睡</option>
-                        </select>
-                    </div>
-                    <div class="form-group sleep-time-item">
-                        <label for="sleep12">夜12点：</label>
-                        <select id="sleep12" class="sleep-select">
-                            <option value="无睡眠">无睡眠</option>
-                            <option value="似睡非睡">似睡非睡</option>
-                            <option value="浅睡">浅睡</option>
-                            <option value="多梦">多梦</option>
-                            <option value="沉睡">沉睡</option>
-                        </select>
-                    </div>
-                    <div class="form-group sleep-time-item">
-                        <label for="sleep1">凌晨1点：</label>
-                        <select id="sleep1" class="sleep-select">
-                            <option value="无睡眠">无睡眠</option>
-                            <option value="似睡非睡">似睡非睡</option>
-                            <option value="浅睡">浅睡</option>
-                            <option value="多梦">多梦</option>
-                            <option value="沉睡">沉睡</option>
-                        </select>
-                    </div>
-                    <div class="form-group sleep-time-item">
-                        <label for="sleep2">凌晨2点：</label>
-                        <select id="sleep2" class="sleep-select">
-                            <option value="无睡眠">无睡眠</option>
-                            <option value="似睡非睡">似睡非睡</option>
-                            <option value="浅睡">浅睡</option>
-                            <option value="多梦">多梦</option>
-                            <option value="沉睡">沉睡</option>
-                        </select>
-                    </div>
-                    <div class="form-group sleep-time-item">
-                        <label for="sleep3">凌晨3点：</label>
-                        <select id="sleep3" class="sleep-select">
-                            <option value="无睡眠">无睡眠</option>
-                            <option value="似睡非睡">似睡非睡</option>
-                            <option value="浅睡">浅睡</option>
-                            <option value="多梦">多梦</option>
-                            <option value="沉睡">沉睡</option>
-                        </select>
-                    </div>
-                    <div class="form-group sleep-time-item">
-                        <label for="sleep4">凌晨4点：</label>
-                        <select id="sleep4" class="sleep-select">
-                            <option value="无睡眠">无睡眠</option>
-                            <option value="似睡非睡">似睡非睡</option>
-                            <option value="浅睡">浅睡</option>
-                            <option value="多梦">多梦</option>
-                            <option value="沉睡">沉睡</option>
-                        </select>
-                    </div>
-                    <div class="form-group sleep-time-item">
-                        <label for="sleep5">凌晨5点：</label>
-                        <select id="sleep5" class="sleep-select">
-                            <option value="无睡眠">无睡眠</option>
-                            <option value="似睡非睡">似睡非睡</option>
-                            <option value="浅睡">浅睡</option>
-                            <option value="多梦">多梦</option>
-                            <option value="沉睡">沉睡</option>
-                        </select>
-                    </div>
-                    <div class="form-group sleep-time-item">
-                        <label for="sleep6">早6点：</label>
-                        <select id="sleep6" class="sleep-select">
-                            <option value="无睡眠">无睡眠</option>
-                            <option value="似睡非睡">似睡非睡</option>
-                            <option value="浅睡">浅睡</option>
-                            <option value="多梦">多梦</option>
-                            <option value="沉睡">沉睡</option>
-                        </select>
-                    </div>
-                    <div class="form-group sleep-time-item">
-                        <label for="sleep7">早7点：</label>
-                        <select id="sleep7" class="sleep-select">
-                            <option value="无睡眠">无睡眠</option>
-                            <option value="似睡非睡">似睡非睡</option>
-                            <option value="浅睡">浅睡</option>
-                            <option value="多梦">多梦</option>
-                            <option value="沉睡">沉睡</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="sleepAssist">睡眠辅助：</label>
-                        <input type="text" id="sleepAssist" placeholder="洗脚、热水袋等">
-                    </div>
+                </div>
 
-                    <h4>其他情况</h4>
-                    <div class="form-group">
-                        <label for="morningWeak">晨起无力：</label>
-                        <select id="morningWeak">
-                            <option value="是">是</option>
-                            <option value="否">否</option>
-                        </select>
+                <!-- 数据管理标签内容 -->
+                <div id="dataManager" class="tab-panel">
+                    <div class="module">
+                        <div class="module-title">数据管理</div>
+
+                        <!-- 新增来源 -->
+                        <div class="form-group">
+                            <h4>新增药物来源</h4>
+                            <label for="sourceName">来源名称：</label>
+                            <input type="text" id="sourceName" placeholder="输入来源名称">
+                            <label for="sourceRemark">来源备注：</label>
+                            <input type="text" id="sourceRemark" placeholder="输入来源备注">
+                            <button id="addSourceBtn">新增来源</button>
+                        </div>
+
+                        <!-- 新增药物 -->
+                        <div class="form-group">
+                            <h4>新增中药药物</h4>
+                            <label for="drugName">药物名称：</label>
+                            <input type="text" id="drugName" placeholder="输入药物名称">
+                            <label for="storageType">存储方式：</label>
+                            <select id="storageType">
+                                <option value="密封">密封</option>
+                                <option value="冷藏">冷藏</option>
+                            </select>
+                            <label for="minStock">预警阈值(g)：</label>
+                            <input type="number" id="minStock" min="0" step="1" value="100">
+                            <label for="defaultEstimate">默认预估量(g)：</label>
+                            <input type="number" id="defaultEstimate" min="1" step="1" value="10">
+                            <button id="addDrugBtn">新增药物</button>
+                        </div>
+
+                        <!-- 新增入库 -->
+                        <div class="form-group">
+                            <h4>药物入库</h4>
+                            <label for="stockInDrug">选择药物：</label>
+                            <select id="stockInDrug"></select>
+                            <label for="stockInSource">选择来源：</label>
+                            <select id="stockInSource"></select>
+                            <label for="stockInGrams">入库克数(g)：</label>
+                            <input type="number" id="stockInGrams" min="1" step="1" value="500">
+                            <label for="stockInAmount">入库总金额(元)：</label>
+                            <input type="number" id="stockInAmount" min="0.01" step="0.01" value="100.00">
+                            <label for="stockInRemark">入库备注：</label>
+                            <input type="text" id="stockInRemark" placeholder="输入入库备注">
+                            <button id="addStockInBtn">确认入库</button>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="dietBloating">腹胀：</label>
-                        <select id="dietBloating">
-                            <option value="是">是</option>
-                            <option value="否">否</option>
-                        </select>
+                </div>
+
+                <!-- 入库记录标签内容 -->
+                <div id="stockIn" class="tab-panel">
+                    <div class="module">
+                        <div class="module-title">入库记录</div>
+                        <div id="stockInList"></div>
                     </div>
-                    <div class="form-group">
-                        <label for="dietAbdominalPain">腹痛：</label>
-                        <select id="dietAbdominalPain">
-                            <option value="是">是</option>
-                            <option value="否">否</option>
-                        </select>
+                </div>
+
+                <!-- 药物标签内容 -->
+                <div id="drugs" class="tab-panel">
+                    <div class="module">
+                        <div class="module-title">药物列表</div>
+                        <table class="drug-table">
+                            <thead>
+                                <tr>
+                                    <th>名称</th>
+                                    <th>存储方式</th>
+                                    <th>预警阈值(g)</th>
+                                    <th>预估量(g)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="drugTableBody"></tbody>
+                        </table>
                     </div>
-                    <div class="form-group">
-                        <label for="dietAppetite">无食欲：</label>
-                        <select id="dietAppetite">
-                            <option value="是">是</option>
-                            <option value="否">否</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="hasDiarrhea">腹泻：</label>
-                        <select id="hasDiarrhea">
-                            <option value="是">是</option>
-                            <option value="否">否</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="otherRemark">其他备注：</label>
-                        <textarea id="otherRemark" rows="3"></textarea>
+                </div>
+
+                <!-- 来源标签内容 -->
+                <div id="sources" class="tab-panel">
+                    <div class="module">
+                        <div class="module-title">来源列表</div>
+                        <table class="drug-table">
+                            <thead>
+                                <tr>
+                                    <th>名称</th>
+                                    <th>备注</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sourceTableBody"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- 提交开方按钮 -->
-        <button id="submitPrescriptionBtn" style="margin-top: 20px; font-size: 16px;">提交开方并保存诊疗日志</button>
     </div>
 </div>
 
