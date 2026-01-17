@@ -76,6 +76,14 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease;
         }
+        h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
         
         .stats-card:hover {
             box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
@@ -183,6 +191,20 @@
         .warning-text{
             font-size: 12px;
             color:#dc6259
+        }
+        .collapse-btn {
+            margin-left: 10px;
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            align-self: flex-start;
+        }
+        .collapse-btn:hover {
+            background-color: #3367d6;
         }
         .prescription-drug-item {
             margin: 10px 0;
@@ -806,7 +828,7 @@
                         <div class="module-title">数据统计</div>
                         <div class="stats-grid">
                             <div class="stats-card">
-                                <h3>昨日统计</h3>
+                                <h3>昨日统计 <button class="collapse-btn" onclick="app.toggleStatsCollapse(this)">收起</button></h3>
                                 <div class="stats-summary">
                                     <p>总量：<span id="yesterdayTotalGrams">0</span>g</p>
                                     <p>种类：<span id="yesterdayTotalTypes">0</span>种</p>
@@ -827,7 +849,7 @@
                                 </div>
                             </div>
                             <div class="stats-card">
-                                <h3>今日统计</h3>
+                                <h3>今日统计 <button class="collapse-btn" onclick="app.toggleStatsCollapse(this)">收起</button></h3>
                                 <div class="stats-summary">
                                     <p>总量：<span id="todayTotalGrams">0</span>g</p>
                                     <p>种类：<span id="todayTotalTypes">0</span>种</p>
@@ -849,7 +871,7 @@
                             </div>
                         </div>
                         <div class="warning-list">
-                            <h3>预警列表  <span class="warning-text">共<span id="warningCount">0</span>种</span></h3>      
+                            <h3>预警列表  <span class="warning-text">共<span id="warningCount">0</span>种</span> <button class="collapse-btn" onclick="app.toggleStatsCollapse(this)">收起</button></h3>      
                             <table class="drug-table">
                                 <thead>
                                     <tr>
@@ -867,13 +889,13 @@
                         <div class="module-title">炮制和废弃药物统计</div>
                         <div class="stats-grid">
                             <div class="stats-card">
-                                <h3>今日炮制统计</h3>
+                                <h3>今日炮制统计 <button class="collapse-btn" onclick="app.toggleStatsCollapse(this)">收起</button></h3>
                                 <p>药物种类: <span id="todayProcessingDrugCount">0</span></p>
                                 <p>总克数: <span id="todayProcessingTotalGrams">0</span></p>
                                 <p>总价值: <span id="todayProcessingTotalAmount">0</span>元</p>
                             </div>
                             <div class="stats-card">
-                                <h3>今日废弃统计</h3>
+                                <h3>今日废弃统计 <button class="collapse-btn" onclick="app.toggleStatsCollapse(this)">收起</button></h3>
                                 <p>药物种类: <span id="todayDiscardDrugCount">0</span></p>
                                 <p>总克数: <span id="todayDiscardTotalGrams">0</span></p>
                                 <p>总价值: <span id="todayDiscardTotalAmount">0</span>元</p>
@@ -888,13 +910,13 @@
                         <div class="module-title">炮制管理 <button id="editProcessingBtn" class="edit-btn">编辑</button></div>
                         <div class="stats-grid">
                             <div class="stats-card">
-                                <h3>本月炮制统计</h3>
+                                <h3>本月炮制统计 <button class="collapse-btn" onclick="app.toggleStatsCollapse(this)">收起</button></h3>
                                 <p>药物种类: <span id="monthlyProcessingDrugCount">0</span></p>
                                 <p>总克数: <span id="monthlyProcessingTotalGrams">0</span></p>
                                 <p>总价值: <span id="monthlyProcessingTotalAmount">0</span>元</p>
                             </div>
                             <div class="stats-card">
-                                <h3>上月炮制统计</h3>
+                                <h3>上月炮制统计 <button class="collapse-btn" onclick="app.toggleStatsCollapse(this)">收起</button></h3>
                                 <p>药物种类: <span id="lastMonthProcessingDrugCount">0</span></p>
                                 <p>总克数: <span id="lastMonthProcessingTotalGrams">0</span></p>
                                 <p>总价值: <span id="lastMonthProcessingTotalAmount">0</span>元</p>

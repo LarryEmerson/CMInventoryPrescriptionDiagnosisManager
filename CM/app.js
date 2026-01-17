@@ -417,7 +417,7 @@ class App {
                             <div class="drug-info">
                                 <span class="drug-name">${stockIn.drugName}</span>
                                 <span class="drug-amount">${stockIn.grams}g / ¥${stockIn.totalAmount.toFixed(2)}</span>
-                                <span class="drug-unit-price">单价：¥${(stockIn.totalAmount / stockIn.grams).toFixed(4)}/g</span>
+                                <span class="drug-unit-price">单价：¥${stockIn.unitPrice.toFixed(4)}/g</span>
                             </div>
                             <div class="source-info">来源：${stockIn.sourceName}</div>
                         </div>
@@ -581,6 +581,52 @@ class App {
             warningListEl.appendChild(row);
         });
     }
+
+    /**
+     * 切换统计卡片的收起/展开状态
+     * @param {HTMLElement} btn 点击的按钮元素
+     */
+    toggleStatsCollapse(btn) {
+        // 获取父元素（h3）
+        const h3Element = btn.parentNode;
+        // 获取卡片元素
+        const cardElement = h3Element.closest(".stats-card, .warning-list, .processing-list");
+        // 查找详情列表（table元素）
+        const tableElement = cardElement.querySelector("table.drug-table");
+        // 查找统计摘要
+        const summaryElement = cardElement.querySelector(".stats-summary");
+        // 查找详情列表标题
+        const detailsTitleElement = cardElement.querySelector("h4");
+        // 查找卡片中的所有p元素（用于炮制统计卡片）
+        const pElements = cardElement.querySelectorAll("p");
+
+        // 切换状态
+        const isCollapsed = btn.textContent === "展开";
+        
+        if (isCollapsed) {
+            // 展开：显示表格
+            if (tableElement) tableElement.style.display = "table";
+            // 显示统计摘要
+            if (summaryElement) summaryElement.style.display = "flex";
+            // 显示详情列表标题
+            if (detailsTitleElement) detailsTitleElement.style.display = "block";
+            // 显示所有p元素
+            pElements.forEach(p => p.style.display = "block");
+            // 更新按钮文本
+            btn.textContent = "收起";
+        } else {
+            // 收起：隐藏表格
+            if (tableElement) tableElement.style.display = "none";
+            // 隐藏统计摘要
+            if (summaryElement) summaryElement.style.display = "none";
+            // 隐藏详情列表标题
+            if (detailsTitleElement) detailsTitleElement.style.display = "none";
+            // 隐藏所有p元素
+            pElements.forEach(p => p.style.display = "none");
+            // 更新按钮文本
+            btn.textContent = "展开";
+        }
+    }
     
     /**
      * 渲染炮制和废弃药物统计
@@ -701,8 +747,8 @@ class App {
                 columns = ["drugName", "grams", "totalAmount", "outTime"];
                 break;
             case "stockIn":
-                tableBody = document.querySelector("#stockInList table tbody");
-                columns = ["drugName", "grams", "totalAmount", "stockInTime"];
+                tableBody = document.getElementById("stockInList");
+                columns = ["drugName", "grams", "totalAmount", "inTime"];
                 break;
             case "processing":
                 tableBody = document.getElementById("processingRecords");
@@ -882,6 +928,160 @@ class App {
                 
                 contentDiv.appendChild(cancelBtn);
                 contentDiv.appendChild(saveBtn);
+            }
+        } else if (tableType === "stockIn") {
+            // 入库记录使用的是div结构
+            const rows = tableBody.querySelectorAll(".stock-in-item");
+            
+            // 使用for...of循环代替forEach，以便在循环内使用await
+            for (const row of rows) {
+                // 保存原始数据
+                const originalData = {};
+                const infoDiv = row.querySelector(".stock-in-info");
+                const drugInfoDiv = infoDiv.querySelector(".drug-info");
+                const sourceInfoDiv = infoDiv.querySelector(".source-info");
+                
+                // 提取原始数据
+                const drugNameMatch = drugInfoDiv.innerHTML.match(/<span class="drug-name">(.*?)<\/span>/);
+                const gramsMatch = drugInfoDiv.innerHTML.match(/<span class="drug-amount">(.*?)g/);
+                const totalAmountMatch = drugInfoDiv.innerHTML.match(/<span class="drug-amount">.*?\/(.*?)<\/span>/);
+                const unitPriceMatch = drugInfoDiv.innerHTML.match(/<span class="drug-unit-price">单价：¥(.*?)\/g<\/span>/);
+                const sourceNameMatch = sourceInfoDiv.innerHTML.match(/来源：(.*?)$/);
+                const inTimeMatch = row.closest(".date-group").querySelector(".date-header");
+                
+                // 提取并去除空格
+                originalData.drugName = drugNameMatch ? drugNameMatch[1].trim() : "";
+                originalData.grams = gramsMatch ? gramsMatch[1].trim() : "";
+                originalData.totalAmount = totalAmountMatch ? totalAmountMatch[1].trim().replace("¥", "") : "";
+                originalData.unitPrice = unitPriceMatch ? unitPriceMatch[1].trim() : "";
+                originalData.sourceName = sourceNameMatch ? sourceNameMatch[1].trim() : "";
+                originalData.inTime = inTimeMatch ? inTimeMatch.textContent : "";
+                
+                // 解析为数值用于计算
+                const originalGrams = parseFloat(originalData.grams) || 0;
+                const originalAmount = parseFloat(originalData.totalAmount) || 0;
+                const originalUnitPrice = parseFloat(originalData.unitPrice) || 0;
+                
+                // 创建编辑表单
+                const editForm = document.createElement("div");
+                editForm.className = "edit-form";
+                editForm.innerHTML = `
+                    <div class="drug-info">
+                        <div>药物：<input type="text" value="${originalData.drugName}" class="edit-input" id="drugName_${row.dataset.id}"></div>
+                        <div>数量：<input type="text" value="${originalGrams}" class="edit-input" id="grams_${row.dataset.id}">g</div>
+                        <div>总值：<input type="text" value="${originalAmount}" class="edit-input" id="totalAmount_${row.dataset.id}">元</div>
+                        <div>来源：<input type="text" value="${originalData.sourceName}" class="edit-input" id="sourceName_${row.dataset.id}"></div>
+                        <div style="margin-top: 10px; font-size: 12px; color: #999;">单价：<span id="unitPrice_${row.dataset.id}">${originalUnitPrice.toFixed(4)}</span>元/g</div>
+                    </div>
+                `;
+                
+                // 替换原有内容
+                const originalContent = infoDiv.innerHTML;
+                infoDiv.innerHTML = "";
+                infoDiv.appendChild(editForm);
+                
+                // 添加数量或总值变化事件监听器，自动计算单价
+                const gramsInput = document.getElementById(`grams_${row.dataset.id}`);
+                const totalAmountInput = document.getElementById(`totalAmount_${row.dataset.id}`);
+                const unitPriceSpan = document.getElementById(`unitPrice_${row.dataset.id}`);
+                
+                const updateUnitPrice = () => {
+                    const grams = parseFloat(gramsInput.value) || 0;
+                    const totalAmount = parseFloat(totalAmountInput.value) || 0;
+                    
+                    if (grams <= 0 || totalAmount <= 0) {
+                        unitPriceSpan.textContent = "0.0000";
+                    } else {
+                        // 计算单价 = 总值 / 数量
+                        const unitPrice = Math.round((totalAmount / grams) * 10000) / 10000;
+                        unitPriceSpan.textContent = unitPrice.toFixed(4);
+                    }
+                };
+                
+                gramsInput.addEventListener("input", updateUnitPrice);
+                totalAmountInput.addEventListener("input", updateUnitPrice);
+                
+                // 添加取消按钮
+                const cancelBtn = document.createElement("button");
+                cancelBtn.textContent = "取消";
+                cancelBtn.className = "cancel-btn";
+                cancelBtn.addEventListener("click", () => {
+                    // 恢复原始内容
+                    infoDiv.innerHTML = originalContent;
+                    cancelBtn.remove();
+                    saveBtn.remove();
+                });
+                
+                // 添加保存按钮
+                const saveBtn = document.createElement("button");
+                saveBtn.textContent = "保存";
+                saveBtn.className = "save-btn";
+                saveBtn.addEventListener("click", async () => {
+                    try {
+                        // 获取更新后的数据
+                        const drugName = document.getElementById(`drugName_${row.dataset.id}`).value;
+                        const grams = parseFloat(document.getElementById(`grams_${row.dataset.id}`).value);
+                        const totalAmount = parseFloat(document.getElementById(`totalAmount_${row.dataset.id}`).value);
+                        const sourceName = document.getElementById(`sourceName_${row.dataset.id}`).value;
+                        const unitPrice = parseFloat(unitPriceSpan.textContent) || 0;
+                        
+                        // 验证基本数据
+                        if (!drugName.trim()) {
+                            throw new Error("药物名称不能为空");
+                        }
+                        if (isNaN(grams) || grams <= 0) {
+                            throw new Error("数量必须是大于0的数字");
+                        }
+                        if (isNaN(totalAmount) || totalAmount < 0) {
+                            throw new Error("总值必须是有效的数字");
+                        }
+                        if (!sourceName.trim()) {
+                            throw new Error("来源不能为空");
+                        }
+                        
+                        const updatedData = {
+                            id: parseInt(row.dataset.id),
+                            drugName: drugName.trim(),
+                            grams: grams,
+                            totalAmount: totalAmount,
+                            unitPrice: unitPrice,
+                            sourceName: sourceName.trim(),
+                            inTime: new Date(originalData.inTime.replace(/\//g, '-').replace(/(\d{4}-\d{2}-\d{2})-(\d{2})-(\d{2})/, '$1T$2:$3:00')).toISOString()
+                        };
+                        
+                        console.log("准备更新入库记录：", updatedData);
+                        
+                        // 直接使用dbManager更新入库记录
+                        try {
+                            // 获取原始入库记录
+                            const originalStockIn = await dbManager.getData("stockIns", updatedData.id);
+                            if (!originalStockIn) {
+                                throw new Error("入库记录不存在");
+                            }
+                            
+                            // 合并更新数据
+                            const finalData = { ...originalStockIn, ...updatedData };
+                            
+                            // 保存更新后的记录
+                            await dbManager.updateData("stockIns", finalData);
+                            console.log("入库记录更新成功");
+                        } catch (error) {
+                            console.error("更新入库记录失败：", error);
+                            throw new Error(`更新失败：${error.message}`);
+                        }
+                        
+                        // 刷新页面数据
+                        await this.refreshPage();
+                        
+                        this.showTip(true, "数据更新成功");
+                    } catch (error) {
+                        console.error("保存失败：", error);
+                        this.showTip(false, `数据更新失败：${error.message}`);
+                    }
+                });
+                
+                infoDiv.appendChild(cancelBtn);
+                infoDiv.appendChild(saveBtn);
             }
         } else {
             // 其他类型使用表格结构
@@ -2182,7 +2382,11 @@ class App {
     async handleBackup() {
         try {
             // 获取所有表的数据
+            const now = new Date();
+            const backupTime = now.toISOString();
+            
             const backupData = {
+                backupTime: backupTime,
                 sources: await dbManager.getAllData('sources'),
                 drugs: await dbManager.getAllData('drugs'),
                 stockIns: await dbManager.getAllData('stockIns'),
@@ -2191,15 +2395,8 @@ class App {
                 diagnosisLogs: await dbManager.getAllData('diagnosisLogs')
             };
 
-            // 生成文件名：中药诊疗管理数据_YYYY-MM-DD-HH-mm-ss.json
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            const fileName = `中药诊疗管理数据_${year}-${month}-${day}-${hours}-${minutes}-${seconds}.json`;
+            // 使用固定文件名：中药诊疗管理数据.json
+            const fileName = `中药诊疗管理数据.json`;
 
             // 创建JSON文件并下载
             const jsonString = JSON.stringify(backupData, null, 2);
@@ -2214,7 +2411,6 @@ class App {
             URL.revokeObjectURL(url);
 
             // 更新本地缓存的最新数据时间
-            const backupTime = now.toISOString();
             localStorage.setItem('lastBackupTime', backupTime);
             console.log('本地备份时间已更新:', backupTime);
             
@@ -2309,19 +2505,23 @@ class App {
                 return false;
             }
             
-            // 找出备份数据中的最新时间
-            let backupLatestTime = null;
+            // 首先检查备份文件中是否包含backupTime字段
+            let backupLatestTime = restoreData.backupTime;
             
-            for (const storeName in restoreData) {
-                if (restoreData.hasOwnProperty(storeName)) {
-                    const dataList = restoreData[storeName];
-                    for (const data of dataList) {
-                        // 检查可能包含时间的字段
-                        const timeFields = ['inTime', 'outTime', 'createTime', 'updateTime'];
-                        for (const field of timeFields) {
-                            if (data[field]) {
-                                if (!backupLatestTime || new Date(data[field]) > new Date(backupLatestTime)) {
-                                    backupLatestTime = data[field];
+            // 如果没有backupTime字段，回退到原来的逻辑
+            if (!backupLatestTime) {
+                // 找出备份数据中的最新时间
+                for (const storeName in restoreData) {
+                    if (restoreData.hasOwnProperty(storeName)) {
+                        const dataList = restoreData[storeName];
+                        for (const data of dataList) {
+                            // 检查可能包含时间的字段
+                            const timeFields = ['inTime', 'outTime', 'createTime', 'updateTime'];
+                            for (const field of timeFields) {
+                                if (data[field]) {
+                                    if (!backupLatestTime || new Date(data[field]) > new Date(backupLatestTime)) {
+                                        backupLatestTime = data[field];
+                                    }
                                 }
                             }
                         }
@@ -2363,9 +2563,9 @@ class App {
                 }
             }
 
-            // 导入数据到数据库
+            // 导入数据到数据库（跳过backupTime字段）
             for (const storeName in restoreData) {
-                if (restoreData.hasOwnProperty(storeName)) {
+                if (restoreData.hasOwnProperty(storeName) && storeName !== 'backupTime') {
                     const dataList = restoreData[storeName];
                     for (const data of dataList) {
                         // 先删除可能存在的旧数据（根据id）
