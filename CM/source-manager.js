@@ -67,6 +67,35 @@ class SourceManager {
             return null;
         }
     }
+    
+    /**
+     * 更新来源信息
+     * @param {number} id 来源ID
+     * @param {object} sourceInfo 来源信息
+     * @returns {Promise} 操作结果
+     */
+    async updateData(id, sourceInfo) {
+        try {
+            // 获取原始来源信息
+            const source = await this.getSourceById(id);
+            if (!source) {
+                return { success: false, message: "来源不存在" };
+            }
+            
+            // 更新来源信息
+            const updatedSource = {
+                ...source,
+                ...sourceInfo
+            };
+            
+            // 保存更新后的来源信息
+            await dbManager.updateData(this.storeName, updatedSource);
+            return { success: true, message: "来源信息更新成功" };
+        } catch (error) {
+            console.error("更新来源信息失败：", error);
+            return { success: false, message: `更新失败：${error.message}` };
+        }
+    }
 }
 
 // 暴露全局实例

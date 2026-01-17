@@ -17,20 +17,29 @@ class StockOutManager {
      */
     async calculateFIFOAmount(drugName, outGrams) {
         try {
+            console.log(`FIFO计算开始：药物=${drugName}, 出库克数=${outGrams}`);
+            
             const outGramsNum = Number(outGrams);
             if (outGramsNum <= 0) {
+                console.log("FIFO计算失败：出库克数必须大于0");
                 return { success: false, totalAmount: 0, message: "出库克数必须大于0" };
             }
 
             // 获取药物入库记录（先进先出）
             const stockIns = await this.stockInManager.getStockInByDrugName(drugName);
+            console.log(`获取到入库记录：${JSON.stringify(stockIns)}`);
+            
             if (stockIns.length === 0) {
+                console.log("FIFO计算失败：该药物无入库记录");
                 return { success: false, totalAmount: 0, message: "该药物无入库记录，无法出库" };
             }
 
             // 计算当前库存
             const currentStock = await this.drugManager.calculateCurrentStock(drugName);
+            console.log(`当前库存：${currentStock}g, 出库克数：${outGramsNum}g`);
+            
             if (currentStock < outGramsNum) {
+                console.log("FIFO计算失败：当前库存不足");
                 return { success: false, totalAmount: 0, message: "当前库存不足，无法出库" };
             }
 
@@ -38,15 +47,22 @@ class StockOutManager {
             let totalOutAmount = 0;
 
             // 先进先出扣减
+            console.log("开始先进先出扣减：");
             for (const stockIn of stockIns) {
                 if (remainingOutGrams <= 0) break;
+                
+                console.log(`处理入库记录：ID=${stockIn.id}, 克数=${stockIn.grams}g, 单价=${stockIn.unitPrice}元/g`);
 
                 const availableGrams = stockIn.grams; // 入库记录剩余克数（此处简化，实际可扩展为入库记录扣减后更新）
                 const useGrams = Math.min(remainingOutGrams, availableGrams);
                 const useAmount = Math.round((useGrams * stockIn.unitPrice) * 100) / 100;
 
+                console.log(`使用克数：${useGrams}g, 使用金额：${useAmount}元`);
+                
                 totalOutAmount += useAmount;
                 remainingOutGrams -= useGrams;
+                
+                console.log(`剩余出库克数：${remainingOutGrams}g, 当前总金额：${totalOutAmount}元`);
             }
 
             return {
@@ -75,6 +91,8 @@ class StockOutManager {
         try {
             // 计算出库金额
             const fifoResult = await this.calculateFIFOAmount(drugName, grams);
+            console.log(`FIFO计算结果：${JSON.stringify(fifoResult)}`);
+            
             if (!fifoResult.success) {
                 return { success: false, message: fifoResult.message };
             }
@@ -96,6 +114,8 @@ class StockOutManager {
                 prescriptionId: prescriptionId || null,
                 remark: remark ? remark.trim() : ""
             };
+            
+            console.log(`创建出库记录：${JSON.stringify(stockOut)}`);
 
             await dbManager.addData(this.storeName, stockOut);
 
@@ -145,6 +165,40 @@ class StockOutManager {
         } catch (error) {
             console.error("获取所有出库记录失败：", error);
             return [];
+        }
+    }
+    
+    /**
+     * 更新出库记录
+     * @param {number} id 出库记录ID
+     * @param {object} stockOutInfo 出库信息
+     * @returns {Promise} 操作结果
+     */
+    async updateData(id, stockOutInfo) {
+        try {
+            // 获取原始出库记录
+            const stockOut = await dbManager.getData(this.storeName, id);
+            if (!stockOut) {
+                return { success: false, message: "出库记录不存在" };
+            }
+            
+            // 更新出库记录
+            const updatedStockOut = {
+                ...stockOut,
+                ...stockOutInfo
+            };
+            
+            // 如果是炮制或开方用药，需要确保outType正确
+            if (updatedStockOut.outType === "炮制" || updatedStockOut.outType === "开方用药") {
+                // 可以添加额外的验证逻辑
+            }
+            
+            // 保存更新后的出库记录
+            await dbManager.updateData(this.storeName, updatedStockOut);
+            return { success: true, message: "出库记录更新成功" };
+        } catch (error) {
+            console.error("更新出库记录失败：", error);
+            return { success: false, message: `更新失败：${error.message}` };
         }
     }
 }

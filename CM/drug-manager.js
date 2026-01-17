@@ -89,6 +89,35 @@ class DrugManager {
             return null;
         }
     }
+    
+    /**
+     * 更新药物信息
+     * @param {number} id 药物ID
+     * @param {object} drugInfo 药物信息
+     * @returns {Promise} 操作结果
+     */
+    async updateData(id, drugInfo) {
+        try {
+            // 获取原始药物信息
+            const drug = await this.getDrugById(id);
+            if (!drug) {
+                return { success: false, message: "药物不存在" };
+            }
+            
+            // 更新药物信息
+            const updatedDrug = {
+                ...drug,
+                ...drugInfo
+            };
+            
+            // 保存更新后的药物信息
+            await dbManager.updateData(this.drugStoreName, updatedDrug);
+            return { success: true, message: "药物信息更新成功" };
+        } catch (error) {
+            console.error("更新药物信息失败：", error);
+            return { success: false, message: `更新失败：${error.message}` };
+        }
+    }
 
     /**
      * 更新药物使用数据（计算动态预估量）

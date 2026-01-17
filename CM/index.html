@@ -46,6 +46,22 @@
             margin-bottom: 15px;
             padding-bottom: 5px;
             border-bottom: 1px solid #eee;
+            position: relative;
+        }
+        .edit-btn {
+            position: absolute;
+            top: -10px;
+            right: 0;
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .edit-btn:hover {
+            background-color: #3367d6;
         }
         .stats-grid {
             display: grid;
@@ -869,7 +885,7 @@
                 <!-- 炮制标签内容 -->
                 <div id="processing" class="tab-panel">
                     <div class="module">
-                        <div class="module-title">炮制管理</div>
+                        <div class="module-title">炮制管理 <button id="editProcessingBtn" class="edit-btn">编辑</button></div>
                         <div class="stats-grid">
                             <div class="stats-card">
                                 <h3>本月炮制统计</h3>
@@ -1241,7 +1257,7 @@
                 <!-- 出库记录标签内容 -->
                 <div id="stockOut" class="tab-panel">
                     <div class="module">
-                        <div class="module-title">出库记录</div>
+                        <div class="module-title">出库记录 <button id="editStockOutBtn" class="edit-btn">编辑</button></div>
                         <div id="stockOutList"></div>
                     </div>
                 </div>
@@ -1302,7 +1318,7 @@
                 <!-- 入库记录标签内容 -->
                 <div id="stockIn" class="tab-panel">
                     <div class="module">
-                        <div class="module-title">入库记录</div>
+                        <div class="module-title">入库记录 <button id="editStockInBtn" class="edit-btn">编辑</button></div>
                         <div id="stockInList"></div>
                     </div>
                 </div>
@@ -1310,7 +1326,7 @@
                 <!-- 药物标签内容 -->
                 <div id="drugs" class="tab-panel">
                     <div class="module">
-                        <div class="module-title">药物列表</div>
+                        <div class="module-title">药物列表 <button id="editDrugsBtn" class="edit-btn">编辑</button></div>
                         <table class="drug-table">
                             <thead>
                                 <tr>
@@ -1328,7 +1344,7 @@
                 <!-- 来源标签内容 -->
                 <div id="sources" class="tab-panel">
                     <div class="module">
-                        <div class="module-title">来源列表</div>
+                        <div class="module-title">来源列表 <button id="editSourcesBtn" class="edit-btn">编辑</button></div>
                         <table class="drug-table">
                             <thead>
                                 <tr>

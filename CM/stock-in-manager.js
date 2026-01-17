@@ -81,6 +81,42 @@ class StockInManager {
             return [];
         }
     }
+    
+    /**
+     * 更新入库记录
+     * @param {number} id 入库记录ID
+     * @param {object} stockInInfo 入库信息
+     * @returns {Promise} 操作结果
+     */
+    async updateData(id, stockInInfo) {
+        try {
+            // 获取原始入库记录
+            const stockIn = await dbManager.getData(this.storeName, id);
+            if (!stockIn) {
+                return { success: false, message: "入库记录不存在" };
+            }
+            
+            // 更新入库记录
+            const updatedStockIn = {
+                ...stockIn,
+                ...stockInInfo
+            };
+            
+            // 重新计算单价
+            if (stockInInfo.grams || stockInInfo.totalAmount) {
+                const grams = stockInInfo.grams || stockIn.grams;
+                const totalAmount = stockInInfo.totalAmount || stockIn.totalAmount;
+                updatedStockIn.unitPrice = Math.round((totalAmount / grams) * 100) / 100;
+            }
+            
+            // 保存更新后的入库记录
+            await dbManager.updateData(this.storeName, updatedStockIn);
+            return { success: true, message: "入库记录更新成功" };
+        } catch (error) {
+            console.error("更新入库记录失败：", error);
+            return { success: false, message: `更新失败：${error.message}` };
+        }
+    }
 }
 
 // 暴露全局实例

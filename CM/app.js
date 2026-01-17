@@ -200,6 +200,23 @@ class App {
             document.getElementById("batchDrugText").value = "";
         });
 
+        // 编辑按钮事件监听器
+        document.getElementById("editStockOutBtn").addEventListener("click", () => {
+            this.toggleEditMode("stockOut");
+        });
+        document.getElementById("editStockInBtn").addEventListener("click", () => {
+            this.toggleEditMode("stockIn");
+        });
+        document.getElementById("editProcessingBtn").addEventListener("click", () => {
+            this.toggleEditMode("processing");
+        });
+        document.getElementById("editDrugsBtn").addEventListener("click", () => {
+            this.toggleEditMode("drugs");
+        });
+        document.getElementById("editSourcesBtn").addEventListener("click", () => {
+            this.toggleEditMode("sources");
+        });
+        
         // 批量新增药物删除全部按钮 - 修改为删除所有药物数据
         document.getElementById("clearAllDrugBtn").addEventListener("click", async () => {
             // if (confirm("确定要删除所有药物数据吗？此操作不可恢复！")) {
@@ -395,7 +412,7 @@ class App {
             
             dateStockIns.forEach(stockIn => {
                 html += `
-                    <div class="stock-in-item">
+                    <div class="stock-in-item" data-id="${stockIn.id}">
                         <div class="stock-in-info">
                             <div class="drug-info">
                                 <span class="drug-name">${stockIn.drugName}</span>
@@ -469,7 +486,7 @@ class App {
                     `ID: ${stockOut.id}\n` +
                     `药物: ${stockOut.drugName}\n` +
                     `克数: ${stockOut.grams}g\n` +
-                    `总价值: ¥${stockOut.totalAmount.toFixed(2)}\n` +
+                    `总值: ¥${stockOut.totalAmount.toFixed(2)}\n` +
                     `出库类型: ${stockOut.outType}\n` +
                     `时间: ${new Date(stockOut.outTime).toLocaleString()}\n` +
                     `备注: ${stockOut.remark || '无'}`
@@ -618,6 +635,598 @@ class App {
     }
     
     /**
+     * 切换编辑模式
+     * @param {string} tableType 表格类型
+     */
+    async toggleEditMode(tableType) {
+        // 切换编辑按钮文本
+        const editBtn = document.getElementById(`edit${tableType.charAt(0).toUpperCase() + tableType.slice(1)}Btn`);
+        if (editBtn.textContent === "编辑") {
+            editBtn.textContent = "批量保存";
+            await this.enableEditMode(tableType);
+            
+            // 在编辑按钮左侧添加退出编辑按钮
+            const exitEditBtn = document.createElement("button");
+            exitEditBtn.id = `exitEdit${tableType.charAt(0).toUpperCase() + tableType.slice(1)}Btn`;
+            exitEditBtn.className = "edit-btn exit-edit-btn";
+            exitEditBtn.textContent = "退出编辑";
+            exitEditBtn.addEventListener("click", () => {
+                this.exitEditMode(tableType);
+            });
+            
+            // 将退出编辑按钮插入到编辑按钮之前
+            editBtn.parentNode.insertBefore(exitEditBtn, editBtn);
+        } else {
+            editBtn.textContent = "编辑";
+            this.saveEditMode(tableType);
+            
+            // 移除退出编辑按钮
+            const exitEditBtn = document.getElementById(`exitEdit${tableType.charAt(0).toUpperCase() + tableType.slice(1)}Btn`);
+            if (exitEditBtn) {
+                exitEditBtn.remove();
+            }
+        }
+    }
+    
+    /**
+     * 退出编辑模式
+     * @param {string} tableType 表格类型
+     */
+    exitEditMode(tableType) {
+        // 恢复编辑按钮文本
+        const editBtn = document.getElementById(`edit${tableType.charAt(0).toUpperCase() + tableType.slice(1)}Btn`);
+        editBtn.textContent = "编辑";
+        
+        // 移除退出编辑按钮
+        const exitEditBtn = document.getElementById(`exitEdit${tableType.charAt(0).toUpperCase() + tableType.slice(1)}Btn`);
+        if (exitEditBtn) {
+            exitEditBtn.remove();
+        }
+        
+        // 刷新页面数据
+        this.refreshPage();
+    }
+    
+    /**
+     * 启用编辑模式
+     * @param {string} tableType 表格类型
+     */
+    async enableEditMode(tableType) {
+        let tableBody;
+        let columns;
+        
+        switch (tableType) {
+            case "stockOut":
+                tableBody = document.getElementById("stockOutList");
+                columns = ["drugName", "grams", "totalAmount", "outTime"];
+                break;
+            case "stockIn":
+                tableBody = document.querySelector("#stockInList table tbody");
+                columns = ["drugName", "grams", "totalAmount", "stockInTime"];
+                break;
+            case "processing":
+                tableBody = document.getElementById("processingRecords");
+                columns = ["drugName", "grams", "totalAmount", "outTime"];
+                break;
+            case "drugs":
+                tableBody = document.querySelector("#drugs table tbody");
+                columns = ["name", "storageType", "minStock", "defaultEstimate"];
+                break;
+            case "sources":
+                tableBody = document.getElementById("sourceTableBody");
+                columns = ["name", "remark"];
+                break;
+            default:
+                return;
+        }
+        
+        if (!tableBody) return;
+        
+        // 为每一行添加编辑控件
+        if (tableType === "stockOut") {
+            // 出库记录使用的是div结构
+            const rows = tableBody.querySelectorAll(".stock-out-record");
+            
+            // 使用for...of循环代替forEach，以便在循环内使用await
+            for (const row of rows) {
+                // 保存原始数据
+                const originalData = {};
+                const contentDiv = row.querySelector(".record-content");
+                
+                // 提取原始数据
+                const drugNameMatch = contentDiv.innerHTML.match(/药物：([^<]+)/);
+                const gramsMatch = contentDiv.innerHTML.match(/数量：([^g]+)g/);
+                const totalAmountMatch = contentDiv.innerHTML.match(/总价值：([^元]+)元/);
+                const outTimeMatch = row.closest(".date-group").querySelector(".date-header");
+                
+                // 提取并去除空格
+                originalData.drugName = drugNameMatch ? drugNameMatch[1].trim() : "";
+                originalData.grams = gramsMatch ? gramsMatch[1].trim() : "";
+                originalData.totalAmount = totalAmountMatch ? totalAmountMatch[1].trim() : "";
+                originalData.outTime = outTimeMatch ? outTimeMatch.textContent : "";
+                
+                // 解析为数值用于计算
+                const originalGrams = parseFloat(originalData.grams) || 0;
+                const originalAmount = parseFloat(originalData.totalAmount) || 0;
+                
+                // 尝试从入库记录获取单价（优先使用入库记录的单价）
+                let unitPrice = 0;
+                
+                try {
+                    // 获取药物的入库记录（按时间倒序，取最新的）
+                    const stockIns = await stockInManager.getStockInByDrugName(originalData.drugName);
+                    
+                    if (stockIns.length > 0) {
+                        // 计算平均单价
+                        const totalCost = stockIns.reduce((sum, item) => sum + (item.totalAmount || 0), 0);
+                        const totalGrams = stockIns.reduce((sum, item) => sum + (item.grams || 0), 0);
+                        
+                        unitPrice = totalGrams > 0 ? (totalCost / totalGrams) : 0;
+                        
+                        console.log(`从入库记录计算单价：药物=${originalData.drugName}, 平均单价=${unitPrice}元/g, 入库记录数量=${stockIns.length}`);
+                    } else {
+                        // 如果没有入库记录，使用原始数据计算单价
+                        unitPrice = originalGrams > 0 ? (originalAmount / originalGrams) : 0;
+                        console.log(`使用原始数据计算单价：药物=${originalData.drugName}, 原始数量=${originalGrams}g, 原始总值=${originalAmount}元, 单价=${unitPrice}元/g`);
+                    }
+                } catch (error) {
+                    console.error(`获取药物单价失败：${error.message}`);
+                    // 如果获取入库记录失败，使用原始数据计算单价
+                    unitPrice = originalGrams > 0 ? (originalAmount / originalGrams) : 0;
+                }
+                
+                // 创建编辑表单
+                const editForm = document.createElement("div");
+                editForm.className = "edit-form";
+                editForm.innerHTML = `
+                    <div>药物：<input type="text" value="${originalData.drugName}" class="edit-input" id="drugName_${row.dataset.id}"></div>
+                    <div>数量：<input type="text" value="${originalGrams}" class="edit-input" id="grams_${row.dataset.id}"></div>
+                    <div>总值：<input type="text" value="${originalAmount}" class="edit-input" id="totalAmount_${row.dataset.id}" readonly>元</div>
+                    <div style="margin-top: 10px; font-size: 12px; color: #999;">单价：${unitPrice.toFixed(2)}元/g</div>
+                `;
+                
+                // 替换原有内容
+                const originalContent = contentDiv.innerHTML;
+                contentDiv.innerHTML = "";
+                contentDiv.appendChild(editForm);
+                
+                // 添加数量变化事件监听器，自动计算总值
+                const gramsInput = document.getElementById(`grams_${row.dataset.id}`);
+                const totalAmountInput = document.getElementById(`totalAmount_${row.dataset.id}`);
+                
+                gramsInput.addEventListener("input", () => {
+                    const grams = parseFloat(gramsInput.value) || 0;
+                    console.log(`用户输入数量: ${grams}g`);
+                    
+                    if (grams <= 0) {
+                        totalAmountInput.value = "0";
+                    } else {
+                        // 计算总值 = 数量 * 单价
+                        const totalAmount = Math.round((grams * unitPrice) * 100) / 100;
+                        console.log(`计算得到总值: ${totalAmount}元 (${grams}g * ${unitPrice}元/g)`);
+                        totalAmountInput.value = totalAmount;
+                    }
+                });
+                
+                // 添加取消按钮
+                const cancelBtn = document.createElement("button");
+                cancelBtn.textContent = "取消";
+                cancelBtn.className = "cancel-btn";
+                cancelBtn.addEventListener("click", () => {
+                    // 恢复原始内容
+                    contentDiv.innerHTML = originalContent;
+                    cancelBtn.remove();
+                    saveBtn.remove();
+                });
+                
+                // 添加保存按钮
+                const saveBtn = document.createElement("button");
+                saveBtn.textContent = "保存";
+                saveBtn.className = "save-btn";
+                saveBtn.addEventListener("click", async () => {
+                    try {
+                        // 获取更新后的数据
+                        const drugName = document.getElementById(`drugName_${row.dataset.id}`).value;
+                        const grams = parseFloat(document.getElementById(`grams_${row.dataset.id}`).value);
+                        const totalAmount = parseFloat(document.getElementById(`totalAmount_${row.dataset.id}`).value);
+                        
+                        // 验证基本数据
+                        if (!drugName.trim()) {
+                            throw new Error("药物名称不能为空");
+                        }
+                        if (isNaN(grams) || grams <= 0) {
+                            throw new Error("数量必须是大于0的数字");
+                        }
+                        if (isNaN(totalAmount) || totalAmount < 0) {
+                            throw new Error("总值必须是有效的数字");
+                        }
+                        
+                        const updatedData = {
+                            id: parseInt(row.dataset.id),
+                            drugName: drugName.trim(),
+                            grams: grams,
+                            totalAmount: totalAmount,
+                            outTime: new Date(originalData.outTime.replace(/\//g, '-').replace(/(\d{4}-\d{2}-\d{2})-(\d{2})-(\d{2})/, '$1T$2:$3:00')).toISOString()
+                        };
+                        
+                        console.log("准备更新出库记录：", updatedData);
+                        
+                        // 直接使用dbManager更新出库记录
+                        try {
+                            // 获取原始出库记录
+                            const originalStockOut = await dbManager.getData("stockOuts", updatedData.id);
+                            if (!originalStockOut) {
+                                throw new Error("出库记录不存在");
+                            }
+                            
+                            // 合并更新数据
+                            const finalData = { ...originalStockOut, ...updatedData };
+                            
+                            // 保存更新后的记录
+                            await dbManager.updateData("stockOuts", finalData);
+                            console.log("出库记录更新成功");
+                        } catch (error) {
+                            console.error("更新出库记录失败：", error);
+                            throw new Error(`更新失败：${error.message}`);
+                        }
+                        
+                        // 刷新页面数据
+                        await this.refreshPage();
+                        
+                        this.showTip(true, "数据更新成功");
+                    } catch (error) {
+                        console.error("保存失败：", error);
+                        this.showTip(false, `数据更新失败：${error.message}`);
+                    }
+                });
+                
+                contentDiv.appendChild(cancelBtn);
+                contentDiv.appendChild(saveBtn);
+            }
+        } else {
+            // 其他类型使用表格结构
+            const rows = tableBody.querySelectorAll("tr");
+            rows.forEach(row => {
+                // 保存原始数据
+                const originalData = {};
+                const cells = row.querySelectorAll("td");
+                
+                cells.forEach((cell, index) => {
+                    if (index < columns.length) {
+                        originalData[columns[index]] = cell.textContent;
+                        const input = document.createElement("input");
+                        input.type = "text";
+                        input.value = cell.textContent;
+                        input.className = "edit-input";
+                        cell.innerHTML = "";
+                        cell.appendChild(input);
+                    }
+                });
+                
+                // 添加取消按钮
+                const cancelBtn = document.createElement("button");
+                cancelBtn.textContent = "取消";
+                cancelBtn.className = "cancel-btn";
+                cancelBtn.addEventListener("click", () => {
+                    this.cancelEditRow(row, originalData, columns);
+                });
+                
+                // 添加保存按钮
+                const saveBtn = document.createElement("button");
+                saveBtn.textContent = "保存";
+                saveBtn.className = "save-btn";
+                saveBtn.addEventListener("click", () => {
+                    this.saveEditRow(row, originalData, columns, tableType);
+                });
+                
+                const lastCell = cells[cells.length - 1];
+                lastCell.appendChild(cancelBtn);
+                lastCell.appendChild(saveBtn);
+            });
+        }
+        
+        // 添加编辑输入框样式
+        const style = document.createElement("style");
+        style.textContent = `
+            .edit-input {
+                width: 100%;
+                padding: 5px;
+                border: 1px solid #4285f4;
+                border-radius: 4px;
+                background-color: #444;
+            }
+            .cancel-btn {
+                margin-left: 5px;
+                background-color: #ea4335;
+                color: white;
+                border: none;
+                padding: 5px 10px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+            }
+            .cancel-btn:hover {
+                background-color: #d33a2c;
+            }
+            .save-btn {
+                margin-left: 5px;
+                background-color: #34a853;
+                color: white;
+                border: none;
+                padding: 5px 10px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+            }
+            .save-btn:hover {
+                background-color: #2e7d32;
+            }
+            .exit-edit-btn {
+                position: absolute;
+                top: -10px;
+                right: 80px;
+                background-color: #fbbc05;
+                color: white;
+            }
+            .exit-edit-btn:hover {
+                background-color: #f9ab00;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    /**
+     * 保存编辑模式
+     * @param {string} tableType 表格类型
+     */
+    async saveEditMode(tableType) {
+        let tableBody;
+        let columns;
+        let dataManager;
+        
+        switch (tableType) {
+            case "stockOut":
+                // 出库记录使用div结构，批量保存功能暂不支持
+                this.showTip(false, "出库记录不支持批量保存，请使用单条记录的保存按钮");
+                return;
+                break;
+            case "stockIn":
+                tableBody = document.querySelector("#stockInList table tbody");
+                columns = ["drugName", "grams", "totalAmount", "stockInTime"];
+                dataManager = stockInManager;
+                break;
+            case "processing":
+                tableBody = document.getElementById("processingRecords");
+                columns = ["drugName", "grams", "totalAmount", "outTime"];
+                dataManager = stockOutManager;
+                break;
+            case "drugs":
+                tableBody = document.querySelector("#drugs table tbody");
+                columns = ["name", "storageType", "minStock", "defaultEstimate"];
+                dataManager = drugManager;
+                break;
+            case "sources":
+                tableBody = document.getElementById("sourceTableBody");
+                columns = ["name", "remark"];
+                dataManager = sourceManager;
+                break;
+            default:
+                return;
+        }
+        
+        if (!tableBody || !dataManager) return;
+        
+        const rows = tableBody.querySelectorAll("tr");
+        const updatedData = [];
+        
+        // 收集更新的数据
+        rows.forEach(row => {
+            const cells = row.querySelectorAll("td");
+            const rowData = {};
+            
+            cells.forEach((cell, index) => {
+                if (index < columns.length) {
+                    const input = cell.querySelector(".edit-input");
+                    rowData[columns[index]] = input ? input.value : cell.textContent;
+                }
+            });
+            
+            // 获取记录ID
+            rowData.id = row.dataset.id;
+            updatedData.push(rowData);
+        });
+        
+        try {
+            // 开始事务
+            await this.beginTransaction();
+            
+            // 保存更新的数据
+            for (const data of updatedData) {
+                // 数据验证
+                if (!this.validateData(data, tableType)) {
+                    throw new Error("数据验证失败");
+                }
+                
+                // 更新数据
+                await dataManager.updateData(data.id, data);
+            }
+            
+            // 提交事务
+            await this.commitTransaction();
+            
+            // 刷新页面数据
+            await this.refreshPage();
+            
+            this.showTip(true, "数据更新成功");
+        } catch (error) {
+            // 回滚事务
+            await this.rollbackTransaction();
+            this.showTip(false, `数据更新失败：${error.message}`);
+        }
+    }
+    
+    /**
+     * 取消行编辑
+     * @param {HTMLElement} row 行元素
+     * @param {object} originalData 原始数据
+     * @param {array} columns 列名数组
+     */
+    cancelEditRow(row, originalData, columns) {
+        const cells = row.querySelectorAll("td");
+        
+        // 恢复原始数据
+        cells.forEach((cell, index) => {
+            if (index < columns.length) {
+                cell.textContent = originalData[columns[index]];
+            }
+        });
+        
+        // 移除取消按钮和保存按钮
+        const cancelBtn = row.querySelector(".cancel-btn");
+        if (cancelBtn) {
+            cancelBtn.remove();
+        }
+        const saveBtn = row.querySelector(".save-btn");
+        if (saveBtn) {
+            saveBtn.remove();
+        }
+    }
+    
+    /**
+     * 保存行编辑
+     * @param {HTMLElement} row 行元素
+     * @param {object} originalData 原始数据
+     * @param {array} columns 列名数组
+     * @param {string} tableType 表格类型
+     */
+    async saveEditRow(row, originalData, columns, tableType) {
+        const cells = row.querySelectorAll("td");
+        const rowData = {};
+        
+        // 收集更新后的数据
+        cells.forEach((cell, index) => {
+            if (index < columns.length) {
+                const input = cell.querySelector(".edit-input");
+                rowData[columns[index]] = input ? input.value : cell.textContent;
+            }
+        });
+        
+        // 获取记录ID
+        rowData.id = row.dataset.id;
+        
+        try {
+            // 数据验证
+            if (!this.validateData(rowData, tableType)) {
+                throw new Error("数据验证失败");
+            }
+            
+            // 获取对应的数据管理器
+            let dataManager;
+            switch (tableType) {
+                case "stockOut":
+                case "processing":
+                    dataManager = stockOutManager;
+                    break;
+                case "stockIn":
+                    dataManager = stockInManager;
+                    break;
+                case "drugs":
+                    dataManager = drugManager;
+                    break;
+                case "sources":
+                    dataManager = sourceManager;
+                    break;
+                default:
+                    throw new Error("未知的表格类型");
+            }
+            
+            // 更新数据
+            const result = await dataManager.updateData(rowData.id, rowData);
+            if (!result.success) {
+                throw new Error(result.message);
+            }
+            
+            // 刷新页面数据
+            await this.refreshPage();
+            
+            this.showTip(true, "数据更新成功");
+        } catch (error) {
+            this.showTip(false, `数据更新失败：${error.message}`);
+        }
+    }
+    
+    /**
+     * 验证数据
+     * @param {object} data 数据对象
+     * @param {string} tableType 表格类型
+     * @returns {boolean} 是否验证通过
+     */
+    validateData(data, tableType) {
+        switch (tableType) {
+            case "stockOut":
+            case "stockIn":
+            case "processing":
+                // 验证数字字段
+                if (isNaN(parseFloat(data.grams)) || parseFloat(data.grams) <= 0) {
+                    return false;
+                }
+                if (isNaN(parseFloat(data.totalAmount)) || parseFloat(data.totalAmount) < 0) {
+                    return false;
+                }
+                break;
+            case "drugs":
+                // 验证药物数据
+                if (!data.name || data.name.trim() === "") {
+                    return false;
+                }
+                if (isNaN(parseFloat(data.minStock)) || parseFloat(data.minStock) < 0) {
+                    return false;
+                }
+                if (isNaN(parseFloat(data.defaultEstimate)) || parseFloat(data.defaultEstimate) <= 0) {
+                    return false;
+                }
+                break;
+            case "sources":
+                // 验证来源数据
+                if (!data.name || data.name.trim() === "") {
+                    return false;
+                }
+                break;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * 开始事务
+     */
+    async beginTransaction() {
+        // 在实际应用中，这里应该开始数据库事务
+        // 由于当前使用的是简单的IndexedDB包装器，这里只是模拟事务
+        this.transactionInProgress = true;
+        this.transactionData = [];
+    }
+    
+    /**
+     * 提交事务
+     */
+    async commitTransaction() {
+        // 在实际应用中，这里应该提交数据库事务
+        this.transactionInProgress = false;
+        this.transactionData = [];
+    }
+    
+    /**
+     * 回滚事务
+     */
+    async rollbackTransaction() {
+        // 在实际应用中，这里应该回滚数据库事务
+        // 由于当前使用的是简单的IndexedDB包装器，这里只是恢复原始数据
+        this.transactionInProgress = false;
+        this.transactionData = [];
+    }
+    
+    /**
      * 渲染炮制记录
      */
     async renderProcessingRecords() {
@@ -651,6 +1260,7 @@ class App {
             
             for (const record of processingRecords) {
                 const row = document.createElement("tr");
+                row.dataset.id = record.id; // 添加data-id属性
                 row.innerHTML = `
                     <td>${record.drugName}</td>
                     <td>${record.grams}</td>
@@ -683,6 +1293,7 @@ class App {
         
         drugs.forEach(drug => {
             const row = document.createElement('tr');
+            row.dataset.id = drug.id; // 添加data-id属性
             row.innerHTML = `
                 <td>${drug.name}</td>
                 <td>${drug.storageType}</td>
@@ -712,6 +1323,7 @@ class App {
         
         sources.forEach(source => {
             const row = document.createElement('tr');
+            row.dataset.id = source.id; // 添加data-id属性
             row.innerHTML = `
                 <td>${source.name}</td>
                 <td>${source.remark || ''}</td>
@@ -789,14 +1401,14 @@ class App {
             // 渲染当前分组下的出库记录
             timeStockOuts.forEach(stockOut => {
                 html += `
-                    <div class="stock-out-record">
+                    <div class="stock-out-record" data-id="${stockOut.id}">
                         <div class="record-header">
                             <!-- 移除时间显示，因为分组标题已经显示 -->
                         </div>
                         <div class="record-content">
                             <div>药物：${stockOut.drugName}</div>
                             <div>数量：${stockOut.grams}g</div>
-                            <div>总价值：${stockOut.totalAmount}元</div>
+                            <div>总值：${stockOut.totalAmount}元</div>
                             <div>类型：${stockOut.outType}</div>
                             ${stockOut.remark ? `<div>备注：${stockOut.remark}</div>` : ''}
                         </div>
