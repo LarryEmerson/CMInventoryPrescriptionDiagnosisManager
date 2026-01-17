@@ -177,7 +177,7 @@
             gap: 10px;
         }
         
-        .prescription-drug-item span {
+        .drug-name {
             flex-grow: 1;
             font-size: 14px;
             white-space: nowrap;
@@ -206,6 +206,13 @@
             cursor: pointer;
             font-size: 14px;
             transition: background-color 0.3s ease;
+        }
+
+        .remaining-grams {
+            color: #4CAF50;
+            font-size: 14px;
+            margin-right: 10px;
+            width: 100px;
         }
         
         .delete-drug-btn:hover {
@@ -303,9 +310,13 @@
             padding: 15px;
             background-color: #2d2d2d;
             color: #e0e0e0;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+            margin-bottom: 0;
             border: 1px solid #4285f4;
+            border-bottom: none;
             position: fixed;
             top: 0;
             left: 10px;
@@ -351,7 +362,7 @@
             /* 标题栏适配 */
             .header {
                 padding: 12px;
-                margin-bottom: 15px;
+                margin-bottom: 0;
             }
             
             .system-title {
@@ -578,7 +589,7 @@
             white-space: nowrap;
             -webkit-overflow-scrolling: touch;
             position: fixed;
-            top: 80px;
+            top: 50px;
             left: 10px;
             right: 10px;
             z-index: 1000;
@@ -609,10 +620,17 @@
         .tab-content {
             padding: 15px;
             /* background-color: white; */
+            margin-top: 90px;
+        }
+
+        .tab-panels-container {
+            /* 传统的Tab实现方式，不需要flex布局 */
         }
 
         .tab-panel {
             display: none;
+            width: 100%;
+            min-height: 600px;
         }
 
         .tab-panel.active {
@@ -764,6 +782,7 @@
 
             <!-- Tab内容 -->
             <div class="tab-content">
+                <div class="tab-panels-container">
                 <!-- 统计标签内容 -->
                 <div id="statistics" class="tab-panel active">
                     <div class="module">
@@ -1262,6 +1281,7 @@
                             <tbody id="sourceTableBody"></tbody>
                         </table>
                     </div>
+                </div>
                 </div>
             </div>
         </div>

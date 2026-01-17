@@ -725,16 +725,25 @@ class App {
     /**
      * 渲染开方药物列表
      */
-    renderPrescriptionDrugs() {
+    async renderPrescriptionDrugs() {
         this.prescriptionDrugList.innerHTML = "";
 
-        this.currentPrescriptionDrugs.forEach((drug, index) => {
+        for (let index = 0; index < this.currentPrescriptionDrugs.length; index++) {
+            const drug = this.currentPrescriptionDrugs[index];
             const drugItem = document.createElement("div");
             drugItem.className = "prescription-drug-item";
 
+            // 获取药物剩余克数
+            const remainingGrams = await drugManager.calculateCurrentStock(drug.name);
+            // 计算a和b的值
+            const b = Math.round(remainingGrams * 100) / 100;
+            const currentGrams = Number(drug.grams);
+            const a = Math.floor(b / currentGrams);
+            
             drugItem.innerHTML = `
-                <span>${drug.name}</span> 
+                <span class="drug-name">${drug.name}</span> 
                 <input type="number" class="drug-grams-input" data-index="${index}" value="${drug.grams}" min="1" step="1">
+                <span class="remaining-grams">(${a}/${b})</span>
                 <button class="delete-drug-btn" data-index="${index}">删除</button>
             `;
 
@@ -744,6 +753,8 @@ class App {
                 const grams = Number(e.target.value);
                 if (grams > 0) {
                     this.currentPrescriptionDrugs[index].grams = grams;
+                    // 重新渲染以更新剩余克数
+                    this.renderPrescriptionDrugs();
                 }
             });
 
@@ -755,7 +766,7 @@ class App {
             });
 
             this.prescriptionDrugList.appendChild(drugItem);
-        });
+        }
     }
 
     /**

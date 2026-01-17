@@ -164,7 +164,10 @@ class DrugManager {
                 }
             }
 
-            return warningList;
+            // 根据使用频率降序排序
+            return warningList.sort((a, b) => {
+                return (b.useCount || 0) - (a.useCount || 0);
+            });
         } catch (error) {
             console.error("获取预警药物列表失败：", error);
             return [];
