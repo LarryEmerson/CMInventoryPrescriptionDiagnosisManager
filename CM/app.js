@@ -2213,6 +2213,11 @@ class App {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
+            // 更新本地缓存的最新数据时间
+            const backupTime = now.toISOString();
+            localStorage.setItem('lastBackupTime', backupTime);
+            console.log('本地备份时间已更新:', backupTime);
+            
             this.showTip(true, '备份成功！');
         } catch (error) {
             console.error('备份失败:', error);
@@ -2220,6 +2225,48 @@ class App {
         }
     }
 
+    /**
+     * 获取本地数据的最新时间
+     * @returns {Promise<string|null>} 最新数据时间的ISO字符串，或null如果没有数据
+     */
+    async getLatestLocalDataTime() {
+        try {
+            // 先从localStorage获取最后备份时间
+            const lastBackupTime = localStorage.getItem('lastBackupTime');
+            if (lastBackupTime) {
+                return lastBackupTime;
+            }
+            
+            // 如果没有备份时间，从数据库中查找最新的记录时间
+            const stores = ['sources', 'drugs', 'stockIns', 'stockOuts', 'prescriptions', 'diagnosisLogs'];
+            let latestTime = null;
+            
+            for (const storeName of stores) {
+                // 获取该表的所有数据
+                const dataList = await dbManager.getAllData(storeName);
+                if (dataList.length > 0) {
+                    // 找到该表中最新的时间
+                    for (const data of dataList) {
+                        // 检查可能包含时间的字段
+                        const timeFields = ['inTime', 'outTime', 'createTime', 'updateTime'];
+                        for (const field of timeFields) {
+                            if (data[field]) {
+                                if (!latestTime || new Date(data[field]) > new Date(latestTime)) {
+                                    latestTime = data[field];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return latestTime;
+        } catch (error) {
+            console.error('获取本地最新数据时间失败:', error);
+            return null;
+        }
+    }
+    
     /**
      * 处理恢复功能
      */
@@ -2249,6 +2296,54 @@ class App {
     }
 
     /**
+     * 检查备份数据是否比本地数据旧
+     * @param {object} restoreData 备份数据
+     * @returns {Promise<boolean>} 如果备份数据比本地数据旧则返回true，否则返回false
+     */
+    async isBackupOlderThanLocal(restoreData) {
+        try {
+            // 获取本地数据的最新时间
+            const localLatestTime = await this.getLatestLocalDataTime();
+            if (!localLatestTime) {
+                // 本地没有数据，可以直接恢复
+                return false;
+            }
+            
+            // 找出备份数据中的最新时间
+            let backupLatestTime = null;
+            
+            for (const storeName in restoreData) {
+                if (restoreData.hasOwnProperty(storeName)) {
+                    const dataList = restoreData[storeName];
+                    for (const data of dataList) {
+                        // 检查可能包含时间的字段
+                        const timeFields = ['inTime', 'outTime', 'createTime', 'updateTime'];
+                        for (const field of timeFields) {
+                            if (data[field]) {
+                                if (!backupLatestTime || new Date(data[field]) > new Date(backupLatestTime)) {
+                                    backupLatestTime = data[field];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if (!backupLatestTime) {
+                // 备份数据中没有时间信息，无法比较，可以直接恢复
+                return false;
+            }
+            
+            // 比较时间
+            return new Date(backupLatestTime) < new Date(localLatestTime);
+        } catch (error) {
+            console.error('检查备份数据时间失败:', error);
+            // 发生错误时，默认允许恢复
+            return false;
+        }
+    }
+    
+    /**
      * 处理恢复文件
      */
     async processRestoreFile(file) {
@@ -2256,6 +2351,17 @@ class App {
             // 读取文件内容
             const content = await this.readFile(file);
             const restoreData = JSON.parse(content);
+
+            // 检查备份数据是否比本地数据旧
+            const isOlder = await this.isBackupOlderThanLocal(restoreData);
+            if (isOlder) {
+                // 显示确认对话框
+                const confirmRestore = confirm('警告：您选择的备份数据比本地数据旧。恢复后可能会丢失最新的数据，是否继续？');
+                if (!confirmRestore) {
+                    this.showTip(false, '恢复已取消');
+                    return;
+                }
+            }
 
             // 导入数据到数据库
             for (const storeName in restoreData) {
@@ -2273,6 +2379,11 @@ class App {
                     }
                 }
             }
+            
+            // 更新本地备份时间
+            const restoreTime = new Date().toISOString();
+            localStorage.setItem('lastBackupTime', restoreTime);
+            console.log('本地备份时间已更新为恢复时间:', restoreTime);
 
             this.showTip(true, '恢复成功！');
             
