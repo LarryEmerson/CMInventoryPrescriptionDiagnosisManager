@@ -329,6 +329,12 @@ class App {
         const warningStats = await statsManager.getWarningStats();
         this.renderWarningStats(warningStats);
         
+        // 加载炮制和废弃药物统计
+        await this.renderProcessingAndDiscardStats();
+        
+        // 加载炮制记录
+        await this.renderProcessingRecords();
+        
         // 加载药物列表
         await this.loadDrugList();
         
@@ -557,6 +563,105 @@ class App {
             `;
             warningListEl.appendChild(row);
         });
+    }
+    
+    /**
+     * 渲染炮制和废弃药物统计
+     */
+    async renderProcessingAndDiscardStats() {
+        try {
+            // 获取今日炮制统计
+            const today = new Date();
+            const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+            const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59).toISOString();
+            
+            const todayProcessingRecords = await stockOutManager.getStockOutByTimeAndType(startOfDay, endOfDay, "炮制");
+            const todayDiscardRecords = await stockOutManager.getStockOutByTimeAndType(startOfDay, endOfDay, "药物作废");
+            
+            // 计算今日炮制统计
+            const todayProcessingStats = this.calculateProcessingStats(todayProcessingRecords);
+            document.getElementById("todayProcessingDrugCount").textContent = todayProcessingStats.drugCount;
+            document.getElementById("todayProcessingTotalGrams").textContent = todayProcessingStats.totalGrams;
+            document.getElementById("todayProcessingTotalAmount").textContent = todayProcessingStats.totalAmount;
+            
+            // 计算今日废弃统计
+            const todayDiscardStats = this.calculateProcessingStats(todayDiscardRecords);
+            document.getElementById("todayDiscardDrugCount").textContent = todayDiscardStats.drugCount;
+            document.getElementById("todayDiscardTotalGrams").textContent = todayDiscardStats.totalGrams;
+            document.getElementById("todayDiscardTotalAmount").textContent = todayDiscardStats.totalAmount;
+        } catch (error) {
+            console.error("渲染炮制和废弃药物统计失败：", error);
+        }
+    }
+    
+    /**
+     * 计算炮制或废弃统计数据
+     * @param {array} records 记录数组
+     * @returns {object} 统计数据
+     */
+    calculateProcessingStats(records) {
+        const drugSet = new Set();
+        let totalGrams = 0;
+        let totalAmount = 0;
+        
+        for (const record of records) {
+            drugSet.add(record.drugName);
+            totalGrams += record.grams;
+            totalAmount += record.totalAmount;
+        }
+        
+        return {
+            drugCount: drugSet.size,
+            totalGrams: Math.round(totalGrams * 100) / 100,
+            totalAmount: Math.round(totalAmount * 100) / 100
+        };
+    }
+    
+    /**
+     * 渲染炮制记录
+     */
+    async renderProcessingRecords() {
+        try {
+            // 获取本月炮制记录
+            const today = new Date();
+            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
+            const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59).toISOString();
+            
+            const processingRecords = await stockOutManager.getStockOutByTimeAndType(startOfMonth, endOfMonth, "炮制");
+            
+            // 计算本月炮制统计
+            const monthlyProcessingStats = this.calculateProcessingStats(processingRecords);
+            document.getElementById("monthlyProcessingDrugCount").textContent = monthlyProcessingStats.drugCount;
+            document.getElementById("monthlyProcessingTotalGrams").textContent = monthlyProcessingStats.totalGrams;
+            document.getElementById("monthlyProcessingTotalAmount").textContent = monthlyProcessingStats.totalAmount;
+            
+            // 获取上月炮制统计
+            const startOfLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1).toISOString();
+            const endOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0, 23, 59, 59).toISOString();
+            
+            const lastMonthProcessingRecords = await stockOutManager.getStockOutByTimeAndType(startOfLastMonth, endOfLastMonth, "炮制");
+            const lastMonthProcessingStats = this.calculateProcessingStats(lastMonthProcessingRecords);
+            document.getElementById("lastMonthProcessingDrugCount").textContent = lastMonthProcessingStats.drugCount;
+            document.getElementById("lastMonthProcessingTotalGrams").textContent = lastMonthProcessingStats.totalGrams;
+            document.getElementById("lastMonthProcessingTotalAmount").textContent = lastMonthProcessingStats.totalAmount;
+            
+            // 渲染炮制记录列表
+            const processingRecordsEl = document.getElementById("processingRecords");
+            processingRecordsEl.innerHTML = "";
+            
+            for (const record of processingRecords) {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${record.drugName}</td>
+                    <td>${record.grams}</td>
+                    <td>${record.totalAmount}</td>
+                    <td>${new Date(record.outTime).toLocaleString()}</td>
+                `;
+                processingRecordsEl.appendChild(row);
+            }
+        } catch (error) {
+            console.error("渲染炮制记录失败：", error);
+        }
     }
     
     /**

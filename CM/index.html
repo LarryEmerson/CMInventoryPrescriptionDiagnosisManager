@@ -771,10 +771,11 @@
         <div class="tab-container">
             <!-- Tab标签 -->
             <div class="tab-header">
-                <button class="tab-btn active" data-tab="statistics">统计</button>
+                <button class="tab-btn" data-tab="statistics">统计</button>
                 <button class="tab-btn" data-tab="prescription">开方</button>
                 <button class="tab-btn" data-tab="stockOut">出库记录</button>
                 <button class="tab-btn" data-tab="dataManager">数据管理</button>
+                <button class="tab-btn" data-tab="processing">炮制</button>
                 <button class="tab-btn" data-tab="stockIn">入库记录</button>
                 <button class="tab-btn" data-tab="drugs">药物</button>
                 <button class="tab-btn" data-tab="sources">来源</button>
@@ -842,10 +843,67 @@
                                     </tr>
                                 </thead>
                                 <tbody id="warningDrugList"></tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 炮制和废弃药物统计 -->
+                    <div class="module">
+                        <div class="module-title">炮制和废弃药物统计</div>
+                        <div class="stats-grid">
+                            <div class="stats-card">
+                                <h3>今日炮制统计</h3>
+                                <p>药物种类: <span id="todayProcessingDrugCount">0</span></p>
+                                <p>总克数: <span id="todayProcessingTotalGrams">0</span></p>
+                                <p>总价值: <span id="todayProcessingTotalAmount">0</span>元</p>
+                            </div>
+                            <div class="stats-card">
+                                <h3>今日废弃统计</h3>
+                                <p>药物种类: <span id="todayDiscardDrugCount">0</span></p>
+                                <p>总克数: <span id="todayDiscardTotalGrams">0</span></p>
+                                <p>总价值: <span id="todayDiscardTotalAmount">0</span>元</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                <!-- 炮制标签内容 -->
+                <div id="processing" class="tab-panel">
+                    <div class="module">
+                        <div class="module-title">炮制管理</div>
+                        <div class="stats-grid">
+                            <div class="stats-card">
+                                <h3>本月炮制统计</h3>
+                                <p>药物种类: <span id="monthlyProcessingDrugCount">0</span></p>
+                                <p>总克数: <span id="monthlyProcessingTotalGrams">0</span></p>
+                                <p>总价值: <span id="monthlyProcessingTotalAmount">0</span>元</p>
+                            </div>
+                            <div class="stats-card">
+                                <h3>上月炮制统计</h3>
+                                <p>药物种类: <span id="lastMonthProcessingDrugCount">0</span></p>
+                                <p>总克数: <span id="lastMonthProcessingTotalGrams">0</span></p>
+                                <p>总价值: <span id="lastMonthProcessingTotalAmount">0</span>元</p>
+                            </div>
+                        </div>
+                        
+                        <div class="processing-list">
+                            <h3>炮制记录</h3>
+                            <table class="drug-table">
+                                <thead>
+                                    <tr>
+                                        <th>药物名称</th>
+                                        <th>克数</th>
+                                        <th>价值</th>
+                                        <th>时间</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="processingRecords">
+                                    <!-- 炮制记录内容将通过JavaScript动态生成 -->
+                                </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
+                
                 <!-- 开方标签内容 -->
                 <div id="prescription" class="tab-panel">
                     <div class="module">
